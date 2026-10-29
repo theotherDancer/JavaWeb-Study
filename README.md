@@ -4,6 +4,30 @@
 
 不要求一开始记住所有框架名字。先抓住主线：**Maven 准备项目依赖，Spring Boot 帮助启动应用，Tomcat 接收请求，Spring MVC 安排调用我们写的方法。**
 
+> 仓库记录起始：2026-10-28（Maven 历史记录）；JavaWeb 正式记录起始：2026-10-29。
+> 最近更新：2026-10-29。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
+
+## 日期导航与代码目录
+
+| 学习日期 | 主题 | 笔记与代码 |
+|---|---|---|
+| 2026-10-28 | Maven 环境、依赖、POM 和下载故障排查 | [原记录副本](notes/2026-10-28/maven.md) · [原项目配置](MavenStudy/pom.xml) |
+| 2026-10-29 | JavaWeb 入门、请求响应和 Servlet 基础 | [当天记录](#2026-10-29web-入门与请求处理链路) · [Spring Boot 工程](SpringBoot_javaWeb_quickstart) |
+
+10 月 28 日的 Maven 内容原先归档在 Database-Basics，已于 10 月 29 日复制到本仓库，保留原始来源和日期。今后 JavaWeb 及其 Maven 前置学习统一在这里接续记录；数据库仓库中的历史内容保留。
+
+### 如何查看和运行代码
+
+- [SpringBoot_javaWeb_quickstart](SpringBoot_javaWeb_quickstart)：当前本机工程快照，归档日期 2026-10-29，包含 POM、启动类、Controller、资源配置、生成的测试类和 Maven Wrapper 文件。
+- IDEA 打开该子目录的 pom.xml 加载工程；运行 SpringBootJavaWebQuickstartApplication 启动类，再访问 http://localhost:8080/hello。
+- 当前 POM 为 Spring Boot 4.1.2、目标 Java 17，使用 spring-boot-starter-webmvc；本机学习时选用 JDK 25。可继续使用 IDEA 配置的 Maven。Wrapper 自身配置了发行版，不等于此前 IDEA 的内置 Maven 版本。
+- [HelloController.java](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/Controller/HelloController.java) 当前返回 `Hello world!喵`。下文 `Hello world!` 是讲解时的示例，二者不矛盾。
+- 源码保留原貌。其中旧注释“告诉浏览器这是请求处理类”不准确，应理解为“告诉 Spring 这个类用于处理请求”；以下概念说明以此为准。
+- 生成的 contextLoads 测试随工程保存，不表示本次已运行测试。/greet 示例尚未写入当前源码，不计入完成。
+- [MavenStudy](MavenStudy)：2026-10-28 从数据库仓库复制的历史快照，只有 pom.xml，包含 Logback 依赖；不要把它当作当前本机 MavenStudy 的完整镜像。
+- 两个子目录是独立工程，不是已配置好的 Maven 父子模块。根目录 README 是学习入口。
+- 本次未上传 IDEA 私有配置、target、依赖缓存或密码；只归档学习源码与必要构建文件。
+
 ## 当前进度
 
 - 当前章节：Web 应用概览，已进入 Servlet 基础概念。
@@ -26,6 +50,8 @@
 
 ## 知识点索引
 
+- [日期导航与代码目录](#日期导航与代码目录)
+- [2026-10-28 Maven 原始记录副本](notes/2026-10-28/maven.md)
 - [工具和框架的关系](#工具和框架的关系)
 - [请求如何到达自己的方法](#请求如何到达自己的方法)
 - [控制器和注解](#控制器和注解)
@@ -324,4 +350,10 @@ Cookie、Session、登录保持和多用户并发数据问题，本日不作为�
 
 ## 记录约定
 
-每次更新同步维护当前进度、知识索引、当天总结和实际示例；区分“讲解过”“写过”“运行验证过”，不将预告内容算作完成。
+1. 按 YYYY-MM-DD 标注实际学习日期，新增日期的内容另设小节；保留旧记录，不反复覆盖历史。
+2. 补录、复制或迁入历史内容时，分别注明原学习日期、归档日期及来源。
+3. 每次更新同步维护顶部日期导航、当前进度、知识索引和代码入口，避免只追加日志。
+4. 保留概念讲解、关键问答和思维导图，围绕实际困惑解释，而非只列学习流水账。
+5. 区分“讲解过”“写过”“运行验证过”；预告和拓展了解不算已完成。
+6. 学习代码保留原貌；若讲解中的旧例子与后来的源码不同，注明版本和差异。
+7. 每次按用户实际学习与更新请求整理提交；本约定不是定时自动上传任务。
