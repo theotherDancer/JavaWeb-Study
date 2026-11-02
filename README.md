@@ -5,7 +5,7 @@
 不要求一开始记住所有框架名字。先抓住主线：**Maven 准备项目依赖，Spring Boot 帮助启动应用，Tomcat 接收请求，Spring MVC 安排调用我们写的方法。**
 
 > 仓库记录起始：2026-10-28（Maven 历史记录）；JavaWeb 正式记录起始：2026-10-29。
-> 最近更新：2026-10-29。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
+> 最近更新：2026-11-02。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
 
 ## 日期导航与代码目录
 
@@ -13,35 +13,38 @@
 |---|---|---|
 | 2026-10-28 | Maven 环境、依赖、POM 和下载故障排查 | [原记录副本](notes/2026-10-28/maven.md) · [原项目配置](MavenStudy/pom.xml) |
 | 2026-10-29 | JavaWeb 入门、请求响应和 Servlet 基础 | [当天记录](#2026-10-29web-入门与请求处理链路) · [Spring Boot 工程](SpringBoot_javaWeb_quickstart) |
+| 2026-11-02 | Postman、简单参数、实体参数、默认值与可选参数 | [当天问答总结](#day-2026-11-02) · [HelloController](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/Controller/HelloController.java) · [User](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/pojo/User.java) |
 
 10 月 28 日的 Maven 内容原先归档在 Database-Basics，已于 10 月 29 日复制到本仓库，保留原始来源和日期。今后 JavaWeb 及其 Maven 前置学习统一在这里接续记录；数据库仓库中的历史内容保留。
 
 ### 如何查看和运行代码
 
-- [SpringBoot_javaWeb_quickstart](SpringBoot_javaWeb_quickstart)：当前本机工程快照，归档日期 2026-10-29，包含 POM、启动类、Controller、资源配置、生成的测试类和 Maven Wrapper 文件。
+- [SpringBoot_javaWeb_quickstart](SpringBoot_javaWeb_quickstart)：当前本机工程快照，最近同步日期 2026-11-02，包含 POM、启动类、Controller、资源配置、生成的测试类和 Maven Wrapper 文件。
 - IDEA 打开该子目录的 pom.xml 加载工程；运行 SpringBootJavaWebQuickstartApplication 启动类，再访问 http://localhost:8080/hello。
 - 当前 POM 为 Spring Boot 4.1.2、目标 Java 17，使用 spring-boot-starter-webmvc；本机学习时选用 JDK 25。可继续使用 IDEA 配置的 Maven。Wrapper 自身配置了发行版，不等于此前 IDEA 的内置 Maven 版本。
 - [HelloController.java](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/Controller/HelloController.java) 当前返回 `Hello world!喵`。下文 `Hello world!` 是讲解时的示例，二者不矛盾。
 - 源码保留原貌。其中旧注释“告诉浏览器这是请求处理类”不准确，应理解为“告诉 Spring 这个类用于处理请求”；以下概念说明以此为准。
-- 生成的 contextLoads 测试随工程保存，不表示本次已运行测试。/greet 示例尚未写入当前源码，不计入完成。
+- 生成的 contextLoads 测试随工程保存，本次未运行该测试。/greet、/introduce、/user-info 已保存到源码，学习者反馈相应 Postman/浏览器测试成功。/introduce 当前生效的是可选年龄版本，必填与默认 18 的旧版本保留为注释。
 - [MavenStudy](MavenStudy)：2026-10-28 从数据库仓库复制的历史快照，只有 pom.xml，包含 Logback 依赖；不要把它当作当前本机 MavenStudy 的完整镜像。
 - 两个子目录是独立工程，不是已配置好的 Maven 父子模块。根目录 README 是学习入口。
 - 本次未上传 IDEA 私有配置、target、依赖缓存或密码；只归档学习源码与必要构建文件。
 
 ## 当前进度
 
-- 当前章节：Web 应用概览，已进入 Servlet 基础概念。
-- 已验证：浏览器访问 `/hello`，开发者工具显示请求方式 GET、状态码 200 OK。
-- 已学习但需要继续练习：工具与框架分工、请求响应、Servlet 调用关系和生命周期。
-- 下一步：请求参数 `/greet?name=小林`；示例已讲解，尚未确认完成。
-- Cookie、Session、登录保持及并发数据问题仅简单了解，不计入已完成内容。
+- 当前章节：网课 Day05-03「请求：简单参数与实体参数」；Postman 入门测试已完成。
+- 已实践：/hello、/greet、/introduce、/user-info；参数名绑定、String → int 转换、缺少参数、默认值、可选 Integer、对象属性绑定。
+- 运行反馈：学习者已验证正常请求、age=abc 的 400、默认年龄、未填年龄，以及实体参数未传 age 为 null。
+- 源码状态：HelloController 当前 /introduce 使用 required=false；User 只有 name、Integer age 和 getter/setter，尚未显式增加构造初始值。
+- 待继续：确认本节是否还有嵌套对象例子，再进入 Day05-04 数组、集合参数。日期、JSON、路径参数及响应处理尚未系统实操。
+- Cookie、Session、登录保持仅简单了解；并发只理解到请求局部变量独立、实例字段可能共享，未完成系统实践。
+- AIFoundry 本日仅查看公开课程路线、检查 Node 环境，没有开始其项目实践；随后回到当前 JavaWeb 网课。10 月 30 日 UDP 代码保存在 [Java-Basics](https://github.com/theotherDancer/Java-Basics/tree/main/NetworkProgramming)，不混作本日内容。
 
 ## 学习路线
 
 | 目录板块 | 内容 | 状态 |
 |---|---|---|
-| Web 应用概览 | HTTP、Tomcat、创建与访问应用 | 学习中 |
-| Servlet 核心技术 | 概述、生命周期、配置、请求响应、乱码、ServletContext | 已入门，未完成 |
+| Web 应用概览 | HTTP、Tomcat、创建与访问应用 | 已完成首轮入门，持续巩固 |
+| Servlet 核心技术 | 概述、生命周期、配置、请求响应、乱码、ServletContext | 已理解调用关系和生命周期；当前借助 Spring MVC 实践请求参数，其余未完成 |
 | 会话状态管理 | Cookie、Session、登录状态保持 | 待正式学习 |
 | 文件上传与下载 | 上传与下载实操 | 待学习 |
 | 前后端分离技术 | MVC、JSON、Axios、跨域 | 待学习 |
@@ -57,7 +60,9 @@
 - [控制器和注解](#控制器和注解)
 - [HTTP 请求与响应](#http-请求与响应)
 - [Servlet 生命周期](#servlet-生命周期)
-- [今天的思维导图](#今天的思维导图)
+- [2026-10-29 思维导图](#今天的思维导图)
+- [Postman、简单参数与实体参数问答](#day-2026-11-02)
+- [2026-11-02 参数接收思维导图](#params-map-2026-11-02)
 - [拓展了解：为什么登录一次后不用重复输入密码](#拓展了解为什么登录一次后不用重复输入密码)
 - [每日学习记录](#每日学习记录)
 
@@ -347,6 +352,202 @@ Cookie、Session、登录保持和多用户并发数据问题，本日不作为�
 **下次接续**
 
 在现有项目中实践 /greet?name=小林，学习 @RequestParam 如何接收参数；尚未确认该示例完成。
+
+
+<a id="day-2026-11-02"></a>
+
+### 2026-11-02：从 Postman 到 Java 参数，弄清数据究竟交给谁
+
+#### 白天：了解路线和准备工具
+
+- 查看 AIFoundry 的公开课程介绍：AI 原生开发、全栈、AI 应用/RAG、Agent 四阶段，主要是 TypeScript/Next.js、PostgreSQL/Prisma 路线，与原 Java/Spring Boot/MySQL 路线不同；今天只了解目录，不记为已完成课程任务。
+- 本机检查：Node.js v24.22.1、npm 11.19.1，node 命令位置 D:/node.exe，已经可用，没有新建 Node 项目。
+- 下载官方 Windows x64 Postman 12.34.4，安装包保留在 D:/Postman；验证官方数字签名，创建桌面快捷方式并修正白色图标。安装目录受 Windows 应用重定向影响，与安装包位置不同，不将个人安装目录作为项目运行要求。
+- 随后继续原 JavaWeb 网课，停在 Day05-03 的简单参数、实体参数。签到项目仍是讨论，不算开发成果。
+
+#### Postman 和浏览器不是同一个接收窗口
+
+Postman 是发送请求、检查响应的客户端工具，不是 Java 服务端，也不代替 IDEA。当前没有编写前端页面，Postman 在代替它测试接口。
+
+```text
+运行启动类 → Spring Boot 启动应用并识别控制器
+Postman 发 GET /hello → 服务器返回给 Postman
+浏览器发 GET /hello  → 服务器返回给浏览器
+```
+
+不单独运行 HelloController；它由框架在请求到来时调用。应用正常运行期间可以反复接收请求，不需要每次重新启动；修改代码后则需要确认运行中的应用已加载新代码，本次练习采用重启。
+
+浏览器地址栏也能测试简单 GET。Postman 的价值在于方便选择请求方式、填写请求头和请求体、保存并重复测试请求；POST、JSON 等功能的实际练习还在后面。
+
+#### 同样传 name、age，为什么会调用不同的方法？
+
+先按路径和请求方式等映射条件选择处理方法，再绑定数据，不是看参数名字猜方法。
+
+| 请求 | 对应方法 | 当前接收方式 |
+|---|---|---|
+| GET /greet?name=小林 | greet | 单个必填字符串 |
+| GET /introduce?name=小林&age=20 | introduce | 简单参数分别接收 |
+| GET /user-info?name=小林&age=20 | userInfo | User 对象接收 |
+
+`/hello` 保留原来的 @RequestMapping，未限制为 GET；以上三个新增方法采用 @GetMapping。
+
+#### 简单参数：请求参数名与 Java 形参名不必相同
+
+```java
+@RequestParam("name") String username
+```
+
+```text
+请求里的 name → 按注解名字找到“小林” → 交给形参 username
+```
+
+可改名的是 Java 形参；请求要按注解指定的 name 传。只传 username 不等于提供了必需的 name。请求参数顺序可以交换，绑定仍然按名字进行。
+
+请求把 age=20 作为文本形式传入，Spring 尝试转换成目标 int/Integer；age=abc 无法转换时，正常默认处理返回 400，不进入对应方法体。值被成功接收不代表业务校验也完成：例如当前方法尚未限制年龄范围。
+
+#### 必填、默认值和“没填就是未知”
+
+| 接收形式 | 没传 age | age=20 | age=abc |
+|---|---|---|---|
+| @RequestParam("age") int age | 默认必填，通常 400 | 20 | 通常 400 |
+| defaultValue="18"，类型 int | 18；空值也使用默认值 | 20 | 通常 400 |
+| required=false，类型 Integer | null | 20 | 通常 400 |
+
+默认值不是非法输入的兜底替换。Integer 可以为 null，int 不能。对“年龄未知”的场景，不应随意用 18 或 0 假装已知。
+
+当前实际生效的代码是可选版本：
+
+```java
+@GetMapping("/introduce")
+public String introduce(
+        @RequestParam("name") String username,
+        @RequestParam(value = "age", required = false) Integer age) {
+    if (age == null) {
+        return "你好，我是" + username + "，年龄未填写";
+    }
+    return "你好，我是" + username + "，今年" + age + "岁";
+}
+```
+
+必填版、默认 18 版已测试后被注释保存，不能说三种 /introduce 同时存在并运行。
+
+#### 实体参数：声明一个 User，Spring 帮忙装数据
+
+User 是自己写的普通 Java 类，pojo 只是包名习惯。它保存 name、Integer age，提供 getter/setter。
+
+```java
+@GetMapping("/user-info")
+public String userInfo(User user) {
+    return "姓名：" + user.getName() + "，年龄：" + user.getAge();
+}
+```
+
+在当前默认构造和属性绑定方式下，可理解为以下过程；这是说明性示意，不是框架源码：
+
+```java
+User user = new User();
+user.setName("小林");
+user.setAge(20);
+userInfo(user);
+```
+
+- 方法形参 user 可以改为 student，但请求仍传 name、age。
+- 请求名匹配的是可绑定属性，对应 setName、setAge，不是 User 变量的名字。
+- 不需要传 user.name、user.age 来接收这两个顶层属性。
+- 未提供 age 时，当前 User 的 Integer age 保持 null；如果字段用 int，其默认值是 0。
+- 对象创建发生在后端，不自动返回页面，也不自动保存数据库；客户端只能收到处理方法实际返回的结果。
+
+#### 两种“默认值”为何看起来一样，实际不同？
+
+| 对比 | @RequestParam 的 defaultValue | User 空参构造赋初始值 |
+|---|---|---|
+| 发生环节 | Spring 接收对应请求参数时 | 通过该构造方法创建对象时 |
+| 得到值的位置 | 对应方法形参 | 对象字段 |
+| 普通 Java 调用 | 不会自动执行请求参数默认规则 | new User() 会执行构造逻辑 |
+| 后续请求绑定 | 已确定传入该形参的值 | setter 可能覆盖对象初始值 |
+
+例如在构造中写 this.age=18，没传 age 时通常保留 18；传 age=20 后会覆盖成 20。传 age= 与完全不传也不能简单等同：默认绑定下空值可能转换成 null 并覆盖初始值。
+
+只写空构造而不赋值，不会把年龄变成 18。当前 User 没有显式构造方法，Java 隐式提供空参构造；本轮源码尚未实现构造默认值，相关问答不能计为已完成实验。
+
+#### 多个客户端同时访问，会混参数吗？
+
+每次方法调用的形参和局部变量各自独立，浏览器的小林与 Postman 的小周分别处理、分别返回。通常请求由服务器工作线程并发处理，完成顺序不保证等同发送顺序。
+
+Controller 通常是单例，实例字段可能共享，不应随意把“当前姓名”存进字段。这是概念提醒，本日未进行多线程实验，不记为系统掌握并发。
+
+#### 今天实际踩过的坑：Params 重复添加
+
+实际出现过：
+
+```text
+/introduce?name=小林&age=&name=小林&age=20
+```
+
+姓名在响应中重复，年龄却显示未填写。不能假设后一个同名参数总覆盖前一个；简单值、数组等目标类型会影响转换。
+
+Postman 地址栏与 Params 表格是同步的同一份数据，不要两边各加一遍。删除重复行，只留 name 和 age；测试缺失年龄时取消勾选 age，不要把“空值”当作所有场景下都等于“未传”。
+
+#### HTTP 状态码回顾
+
+| 状态码 | 本轮理解 |
+|---|---|
+| 200 | 请求成功处理 |
+| 400 | 参数缺失、无法按要求转换等请求错误 |
+| 401 | 缺少有效身份认证 |
+| 403 | 拒绝访问 |
+| 404 | 找不到目标资源 |
+| 405 | 请求方式不支持 |
+| 500 | 服务端内部错误 |
+
+今天实际测试了正常响应和非法年龄的 400，其余是解释回顾。状态码与响应体不同，return 一段“失败”文字不自动产生错误状态码。应用可以自定义错误处理，因此示例不作为所有系统固定行为。
+
+<a id="params-map-2026-11-02"></a>
+
+#### 参数接收思维导图
+
+```mermaid
+mindmap
+  root((2026-11-02 请求参数))
+    客户端测试
+      Postman代替尚未写的页面
+      谁发请求谁收到响应
+      Params与地址栏同步
+    先选择方法
+      路径区分接口
+      请求方式参与匹配
+      启动类运行即可接待请求
+    简单参数
+      注解指定请求参数名
+      Java形参名可以不同
+      默认必填
+      defaultValue补缺失或空值
+      required为false允许不传
+      Integer允许null
+    实体参数
+      Spring创建User
+      请求名匹配属性
+      setter设置值
+      User变量名不参与属性匹配
+    两种默认值
+      收请求时补值
+      创建对象时初始化
+      后续绑定可覆盖初始值
+    实际排错
+      非法年龄返回400
+      重复参数不是自动覆盖
+      未传和空值要区分
+```
+
+#### 本次上传验证与下次起点
+
+- 归档实际新增/修改：HelloController.java 与 pojo/User.java；源码保持用户写法和注释，不借上传重构。启动类、POM、配置和生成测试类没有新改动。
+- 学习者反馈：Postman 与浏览器正常请求、默认值、可选参数、实体参数与缺失年龄均测试成功；截图记录了重复参数错误并在调整后反馈成功。
+- 本次上传前 JDK 25 使用 --release 17、UTF-8 和本地缓存的框架二进制库编译 3 个正式源码文件通过。
+- 隔离快照的离线 Maven compile 未通过：父 POM 在缓存中，但仓库来源标记与本次 central 上下文不匹配，离线模式不能重新确认。这是本次构建环境限制，不等同于已证明业务代码错误；未修改用户依赖版本或缓存。
+- 本次未重新启动服务、未复测 HTTP、未运行生成的 contextLoads 测试，不把源码编译检查说成 Maven 全构建或完整验收通过。
+- 下一步先复看实体参数代码，再确认网课是否有嵌套对象内容，然后继续 Day05-04 数组、集合参数；日期、JSON、路径参数和响应处理仍在后面。
+
 
 ## 记录约定
 
