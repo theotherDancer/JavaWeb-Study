@@ -19,4 +19,12 @@ public class User {
     public void setAge(Integer age) {
         this.age = age;
     }
+    private Address address;
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
 }

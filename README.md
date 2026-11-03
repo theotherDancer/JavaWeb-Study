@@ -5,7 +5,7 @@
 不要求一开始记住所有框架名字。先抓住主线：**Maven 准备项目依赖，Spring Boot 帮助启动应用，Tomcat 接收请求，Spring MVC 安排调用我们写的方法。**
 
 > 仓库记录起始：2026-10-28（Maven 历史记录）；JavaWeb 正式记录起始：2026-10-29。
-> 最近更新：2026-11-02。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
+> 最近更新：2026-11-03。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
 
 ## 日期导航与代码目录
 
@@ -14,30 +14,36 @@
 | 2026-10-28 | Maven 环境、依赖、POM 和下载故障排查 | [原记录副本](notes/2026-10-28/maven.md) · [原项目配置](MavenStudy/pom.xml) |
 | 2026-10-29 | JavaWeb 入门、请求响应和 Servlet 基础 | [当天记录](#2026-10-29web-入门与请求处理链路) · [Spring Boot 工程](SpringBoot_javaWeb_quickstart) |
 | 2026-11-02 | Postman、简单参数、实体参数、默认值与可选参数 | [当天问答总结](#day-2026-11-02) · [HelloController](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/Controller/HelloController.java) · [User](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/pojo/User.java) |
+| 2026-11-03 | 嵌套对象、数组/List、日期/JSON/路径参数、响应包装、JDBC 接口整合 | [当天总结](#day-2026-11-03) · [接口清单](#endpoints-2026-11-03) · [完整流程图](#flow-2026-11-03) |
+
 
 10 月 28 日的 Maven 内容原先归档在 Database-Basics，已于 10 月 29 日复制到本仓库，保留原始来源和日期。今后 JavaWeb 及其 Maven 前置学习统一在这里接续记录；数据库仓库中的历史内容保留。
 
 ### 如何查看和运行代码
 
-- [SpringBoot_javaWeb_quickstart](SpringBoot_javaWeb_quickstart)：当前本机工程快照，最近同步日期 2026-11-02，包含 POM、启动类、Controller、资源配置、生成的测试类和 Maven Wrapper 文件。
+- [SpringBoot_javaWeb_quickstart](SpringBoot_javaWeb_quickstart)：当前本机工程快照，最近同步日期 2026-11-03，包含 POM、启动类、Controller、资源配置、生成的测试类和 Maven Wrapper 文件。
 - IDEA 打开该子目录的 pom.xml 加载工程；运行 SpringBootJavaWebQuickstartApplication 启动类，再访问 http://localhost:8080/hello。
 - 当前 POM 为 Spring Boot 4.1.2、目标 Java 17，使用 spring-boot-starter-webmvc；本机学习时选用 JDK 25。可继续使用 IDEA 配置的 Maven。Wrapper 自身配置了发行版，不等于此前 IDEA 的内置 Maven 版本。
 - [HelloController.java](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/Controller/HelloController.java) 当前返回 `Hello world!喵`。下文 `Hello world!` 是讲解时的示例，二者不矛盾。
 - 源码保留原貌。其中旧注释“告诉浏览器这是请求处理类”不准确，应理解为“告诉 Spring 这个类用于处理请求”；以下概念说明以此为准。
 - 生成的 contextLoads 测试随工程保存，本次未运行该测试。/greet、/introduce、/user-info 已保存到源码，学习者反馈相应 Postman/浏览器测试成功。/introduce 当前生效的是可选年龄版本，必填与默认 18 的旧版本保留为注释。
+- 真实学生查询：确保本机 MySQL 的 campus_learning.student 已存在（需要 student_id、name 列），在 Spring Boot 启动类运行配置中设置 DB_PASSWORD，再请求 GET /students。账号 root、localhost:3306 为本次学习环境，不应直接照搬到其他环境；不提交密码、运行配置或数据库物理文件。
+- 新增对象/查询类：[Address](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/pojo/Address.java)、[Result](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/pojo/Result.java)、[Student](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/pojo/Student.java)、[StudentDao](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/dao/StudentDao.java)、[StudentController](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/Controller/StudentController.java)。
 - [MavenStudy](MavenStudy)：2026-10-28 从数据库仓库复制的历史快照，只有 pom.xml，包含 Logback 依赖；不要把它当作当前本机 MavenStudy 的完整镜像。
 - 两个子目录是独立工程，不是已配置好的 Maven 父子模块。根目录 README 是学习入口。
 - 本次未上传 IDEA 私有配置、target、依赖缓存或密码；只归档学习源码与必要构建文件。
 
 ## 当前进度
 
-- 当前章节：网课 Day05-03「请求：简单参数与实体参数」；Postman 入门测试已完成。
-- 已实践：/hello、/greet、/introduce、/user-info；参数名绑定、String → int 转换、缺少参数、默认值、可选 Integer、对象属性绑定。
-- 运行反馈：学习者已验证正常请求、age=abc 的 400、默认年龄、未填年龄，以及实体参数未传 age 为 null。
-- 源码状态：HelloController 当前 /introduce 使用 required=false；User 只有 name、Integer age 和 getter/setter，尚未显式增加构造初始值。
-- 待继续：确认本节是否还有嵌套对象例子，再进入 Day05-04 数组、集合参数。日期、JSON、路径参数及响应处理尚未系统实操。
-- Cookie、Session、登录保持仅简单了解；并发只理解到请求局部变量独立、实例字段可能共享，未完成系统实践。
-- AIFoundry 本日仅查看公开课程路线、检查 Node 环境，没有开始其项目实践；随后回到当前 JavaWeb 网课。10 月 30 日 UDP 代码保存在 [Java-Basics](https://github.com/theotherDancer/Java-Basics/tree/main/NetworkProgramming)，不混作本日内容。
+- 最近学习：2026-11-03，网课 Day05-03 嵌套对象、Day05-04 数组/集合、Day05-05 日期/JSON、Day05-06 路径、Day05-07～08 响应及案例的基础练习。
+- 已指导实践：嵌套 Address、数组/List 参数、日期解析、JSON 请求体、路径参数、返回 User/List、Result 响应包装。
+- 整合成果：GET /students 通过 JDBC 查询 MySQL；当日实际请求确认 HTTP 200、success=true、message=查询成功，返回 5 个学生，每项包含 studentId、name。
+- 理解进展：能描述客户端与 Java 后端的 HTTP 通信、Java 后端与 MySQL 的 JDBC 通信，以及查询结果到 JSON 的完整过程。
+- 掌握边界：以提示下编码、运行成功和理解主线为主，不等于已经能独立编写全部 SQL/JDBC。统一异常处理、日期容错、连接池等尚未实现。
+- 三层架构、IOC/DI 仅预告，按用户要求今天暂停；当前 Controller 直接建立连接，调用静态 DAO，尚无 Service 层。
+- 后续学习方式：面向 AI Coding，以需求、小功能实现、关键代码解释和亲自验证为主，不以默写样板代码为目标。
+- 会话管理、文件上传下载、完整前后端页面联调仍待学习。AIFoundry 仅于 11 月 2 日了解公开路线；签到程序仍为讨论。
+- 10 月 30 日 UDP 练习归档在 [Java-Basics](https://github.com/theotherDancer/Java-Basics/tree/main/NetworkProgramming)，不混记为本日新增实践。
 
 ## 学习路线
 
@@ -64,6 +70,9 @@
 - [Postman、简单参数与实体参数问答](#day-2026-11-02)
 - [2026-11-02 参数接收思维导图](#params-map-2026-11-02)
 - [拓展了解：为什么登录一次后不用重复输入密码](#拓展了解为什么登录一次后不用重复输入密码)
+- [11 月 3 日：参数、响应、JDBC 问答总结](#day-2026-11-03)
+- [当前接口清单与调用示例](#endpoints-2026-11-03)
+- [HTTP 与 JDBC 完整流程图](#flow-2026-11-03)
 - [每日学习记录](#每日学习记录)
 
 ## 工具和框架的关系
@@ -547,6 +556,213 @@ mindmap
 - 隔离快照的离线 Maven compile 未通过：父 POM 在缓存中，但仓库来源标记与本次 central 上下文不匹配，离线模式不能重新确认。这是本次构建环境限制，不等同于已证明业务代码错误；未修改用户依赖版本或缓存。
 - 本次未重新启动服务、未复测 HTTP、未运行生成的 contextLoads 测试，不把源码编译检查说成 Maven 全构建或完整验收通过。
 - 下一步先复看实体参数代码，再确认网课是否有嵌套对象内容，然后继续 Day05-04 数组、集合参数；日期、JSON、路径参数和响应处理仍在后面。
+
+
+
+<a id="day-2026-11-03"></a>
+
+### 2026-11-03：从复杂参数到真实数据库，把请求响应接成一条业务流程
+
+今天的重点不是记住更多注解，而是看清楚：客户端送来的数据怎样成为 Java 对象，数据库记录怎样成为返回客户端的 JSON。以下区分实际源码、运行反馈和只讨论过的完善方向。
+
+#### 一、嵌套对象：User 里面的地址在哪？
+
+新增 Address（city、district），在 User 中增加 address 属性及 getter/setter。GET 查询参数使用 address.city=武汉、address.district=洪山区，默认绑定机制可为可写的嵌套属性创建对象并填充数据。
+
+```text
+user → User 对象
+          ├─ name
+          ├─ age
+          └─ address → Address 对象
+                          ├─ city
+                          └─ district
+```
+
+- getAddress 返回已有地址对象的引用，不创建第二个地址。
+- user.getAddress().getCity() 先取地址再取城市；未传地址可能为 null，所以当前代码先判空。
+- 这些是运行时内存对象，不会在项目目录生成“用户对象文件”，也不会自动保存数据库。
+- 打印地址应放在持有该局部变量的接口方法内；复制到启动类 main 不能直接访问局部变量。
+- return 结束当前方法，无条件 return 后再打印不可达；判空分支 return 后的其他路径可以继续执行。
+- 跨包引用公开类使用 import；跨项目还需建立依赖。Maven install 与声明依赖是复用独立项目代码的一种方式，不是仅把文件夹摆在一起。
+
+#### 二、启动类与 Controller：为什么重启了还没打印？
+
+启动类负责启动应用，Controller 方法在匹配的请求到达时才执行。修改 Java 代码后，本轮采用保存、停止旧应用、重新启动、再次发请求的流程。
+
+```text
+main 启动：开门营业
+HTTP 请求：有人来办业务
+Controller 执行：读取参数、打印或返回
+```
+
+println 显示在 IDEA 控制台；return 的结果交给框架处理后成为客户端收到的响应。新 /hobbies 方法曾误放启动类，只有 @SpringBootApplication 而非控制器注解，没有注册成预期请求映射，移入 HelloController 后反馈 200 和预期内容。
+
+#### 三、数组和 List：同名参数这次为什么可以重复？
+
+hobby=读书&hobby=篮球&hobby=编程，用 String[] 或 @RequestParam("hobby") List<String> 接收时，本来就需要把多个值收集起来。与单值 name、age 误加重复参数不同。
+
+当前 /hobbies 使用 Arrays.toString，/hobby-list 使用 List.toString，二者返回类型是 String；看到方括号不代表它们返回了真正的 JSON 数组。后面的 /sample-users 才演示 List 对象经转换器生成 JSON。
+
+Postman 没填的占位行不等于 new User()；取消勾选不会发送，hobby= 则是提供空值。未形成参数的空白行不影响接收，没有必需的 hobby 通常 400。
+
+#### 四、日期、JSON 与路径：从不同位置取得数据
+
+| 内容 | 当前代码 | 要点 |
+|---|---|---|
+| 日期 | LocalDateTime + @DateTimeFormat | 输入格式 yyyy-MM-dd HH:mm:ss；MM 是月、mm 是分 |
+| JSON | @RequestBody User user | Body → raw → JSON，发送 Content-Type: application/json |
+| 路径 | @PathVariable("studentId") String id | /students/2026001 中取出学号，不是查询参数 |
+
+日期参数曾返回 400，截图中值前有多余空白，清理后反馈成功。我们讨论了客户端选择器、后端 strip 清理、解析异常给出友好 400，但**当前源码未实现这些容错改动**。不能解析时不应偷偷替换成当前时间。LocalDateTime 默认转字符串可能出现 T，与输入解析格式不是同一回事。
+
+JSON 也可包含 address 对象，映射到嵌套 Address；/user-json 当前检查地址 null 后返回文字。只选择 POST 不代表自动读取 JSON，需要对应的接收配置。
+
+#### 五、响应：JSON 是给客户端程序读的，不是让用户读原文
+
+```text
+@RequestBody：请求体 JSON → Java 对象
+返回普通对象并使用 @ResponseBody：Java 对象 → JSON 响应
+```
+
+@RestController 组合 @Controller 与 @ResponseBody 的效果，当前方法不用每次重复写响应注解。返回 String 通常直接写文字，不是所有返回值都变成 JSON。
+
+/sample-user 创建并返回一个 User；/sample-users 从返回 List 进一步改成返回 Result。Result 是自己写的普通类：
+
+| 字段 | 当前含义 |
+|---|---|
+| success | 代码设置的业务成功标记 |
+| message | 提示信息 |
+| data | 实际数据，当前为 Object，可引用不同对象 |
+
+Result 通过构造赋值、getter 暴露数据；框架生成 JSON，Postman 的缩进和颜色只是显示排版。名单引用放进 data，不会因为包装就复制一遍名单。业务 success 不自动决定 HTTP 状态码。
+
+前端以后可以读取 JSON 并生成名单页面；今天使用 Postman，没有编写前端。GET 与 POST 都能返回 JSON，区别主要在请求语义：查询通常 GET，创建/提交通常 POST；请求方式不是响应格式开关。当前 GET 接口只在客户端改 POST 通常 405，不能假设两者自动兼容。
+
+#### 六、复用以前的 JDBC：StudentDao、Connection 又是什么？
+
+| 名称 | 当前作用 |
+|---|---|
+| Student | 保存查出的 studentId、name |
+| Connection | JDBC 接口类型，连接对象由驱动实现 |
+| connection | 引用已建立数据库连接的变量 |
+| StudentDao | 普通数据访问类，当前只有静态 findAll |
+| PreparedStatement | 通过已有连接准备、执行 SQL |
+| ResultSet | 读取本次查询结果 |
+| Result | 包装业务结果，交给响应转换 |
+
+Student 构造方法把查到的学号、姓名赋给字段，getter 用于读取。暂不写 setter 是因为当前只查询展示，不代表对象今后永远不能增加修改方法；内存对象的修改也不会自动执行数据库 UPDATE。
+
+Web 项目新增 com.mysql:mysql-connector-j:9.7.0，与 JdbcStudy 原驱动版本一致。本地已有 JAR 也仍需当前项目声明依赖。
+
+#### 七、两个通信维度：终于查到了真实名单
+
+1. **客户端 ↔ Java 后端**：HTTP 请求与响应。
+2. **Java 后端 ↔ MySQL**：JDBC 连接、SQL 执行、结果读取。
+
+Controller 读取 DB_PASSWORD，使用 root 和 jdbc:mysql://localhost:3306/campus_learning 建立连接，把连接传给 DAO。DAO 执行：
+
+```sql
+SELECT student_id, name FROM student ORDER BY student_id
+```
+
+ResultSet 初始位置在第一行之前；next 为 true 时读取当前行，每行 new Student(id,name)，放进 List，再把集合返回 Controller。
+
+DAO 创建的 ResultSet、PreparedStatement 由 DAO 的 try-with-resources 关闭；Controller 创建的 Connection 由 Controller 的 try-with-resources 关闭。即使 return 在 try 内，返回前仍执行清理。资源所有权是本例的分工，不是 Java 强制“谁创建谁关闭”。
+
+**关闭数据库连接不等于关闭 Web 应用，也不阻止 HTTP 响应。** 学生数据已经装进普通对象，数据库连接关闭后仍能序列化成 JSON。
+
+当日实际工具请求 GET /students 确认：HTTP 200、success=true、message=查询成功，data 中 5 名学生，每项有 studentId、name。不是 Controller 中手写的假名单。空表则返回空数组，不自动视为异常。
+
+当前异常还未统一处理：环境变量缺失抛 IllegalStateException，连接/查询失败可抛 SQLException；框架默认通常返回 500，不会自动生成 Result(false,...)。
+
+<a id="endpoints-2026-11-03"></a>
+
+#### 八、当前接口清单
+
+| 方法与路径 | 输入/用途 | 响应 |
+|---|---|---|
+| /hello（原 @RequestMapping） | 无参数，未限制为 GET | 固定问候字符串 |
+| GET /greet | name 必填 | 问候字符串 |
+| GET /introduce | name 必填、age 可选 Integer | 介绍字符串；旧必填/默认值版本已注释 |
+| GET /user-info | name、address.city、address.district | 地址文字或“地址未填写” |
+| GET /hobbies | 多个 hobby | 数组内容的字符串 |
+| GET /hobby-list | 多个 hobby | 集合内容的字符串，另在控制台打印 |
+| GET /meeting | time=2026-11-03 14:30:00 | 日期时间文字 |
+| POST /user-json | User 的 JSON 请求体，可含 address | 地址文字或“地址未填写” |
+| GET /students/{studentId} | 路径学号 | 仅回显学号，不查数据库 |
+| GET /sample-user | 无参数 | 固定 User 的 JSON |
+| GET /sample-users | 无参数 | Result 包装固定的两个用户 |
+| GET /students | 无参数，读取数据库 | Result 包装真实 List<Student> |
+
+GET /students 与 GET /students/{studentId} 是不同接口，不能把后者误记成按学号查询数据库已完成。
+
+<a id="flow-2026-11-03"></a>
+
+#### 九、完整流程图：HTTP、Java 对象和 JDBC
+
+```mermaid
+flowchart TD
+    subgraph START["启动应用"]
+        A["运行启动类 main"] --> B["Spring Boot 初始化，启动内嵌 Tomcat"]
+        B --> C["识别控制器，建立 GET /students 映射"]
+        B --> D["DispatcherServlet 注册给 Tomcat"]
+        C --> E["监听 8080，等待请求"]
+        D --> E
+    end
+    subgraph HTTP["客户端与后端：HTTP"]
+        F["Postman 发送 GET /students"] --> G["Tomcat 接收并解析请求"]
+        G --> H["调用 DispatcherServlet，协调 Spring MVC"]
+        H --> I["找到 StudentController.findAll"]
+    end
+    E -. "准备好后接待" .-> G
+    subgraph JDBC["后端与数据库：JDBC"]
+        I --> J["读取 DB_PASSWORD，检查非空"]
+        J --> K["DriverManager.getConnection 建立连接"]
+        K --> L["把 connection 传给 StudentDao.findAll"]
+        L --> M["创建空 List，准备 SELECT"]
+        M --> N["connection.prepareStatement"]
+        N --> O["executeQuery"]
+        O --> P[("MySQL student 表")]
+        P --> Q["得到 ResultSet"]
+        Q --> R{"next 是否有下一行"}
+        R -- "true" --> S["读取 student_id、name"]
+        S --> T["new Student，加入 List"]
+        T --> R
+        R -- "false" --> U["关闭 ResultSet、statement"]
+        U --> V["返回 List，不在 DAO 关闭 connection"]
+    end
+    subgraph RESPONSE["Java 结果与 HTTP 响应"]
+        V --> W["Controller 创建 Result，data 引用 List"]
+        W --> X["退出 try，自动关闭 connection"]
+        X --> Y["将 Result 返回框架"]
+        Y --> Z["JSON 转换器通过 getter 读取对象数据"]
+        Z --> ZA["Result 为对象，data 为数组，Student 为数组元素"]
+        ZA --> ZB["正常 HTTP 200，Tomcat 发送 JSON"]
+        ZB --> ZC["Postman 显示：success、message、5 个学生"]
+    end
+    J -. "变量缺失" .-> ER["当前未统一处理异常，默认通常 500"]
+    K -. "连接失败" .-> ER
+    O -. "查询失败" .-> ER
+```
+
+Result 是内存对象，JSON 是对象数据的文本表示，不是把 Java 对象本身搬到客户端。两次 return 也不同：DAO 在 Java 内部返回引用；Controller 返回值最终才经框架成为网络响应。
+
+#### 十、今天的排错与学习方式调整
+
+- Postman 更新到 12.35.0 的日志出现路径过长，程序位于 Windows 重定向后的较长目录。桌面入口打不开，手动将快捷方式目标改到保留的 app-12.34.4/Postman.exe 后反馈成功；属于临时恢复旧版本，不代表更新路径问题彻底修复。
+- Spring Boot 运行配置需单独设置 DB_PASSWORD，旧 JdbcStudy 的配置不会自动套用。检查只确认变量存在且非空，不显示密码；随后真实查询成功。
+- 认识 SQL 和连接代码的用途，不等于已经能独立编写。以后围绕 AI Coding 采用“需求 → 小范围实现 → 解释关键改动 → 亲自验收 → 保存版本”，让 AI 生成重复代码，人把关业务、数据、权限、修改范围和验证结果。
+- 网课先讲三层、后讲数据库是教学安排；本次利用旧 JDBC 知识提前接库，不代表三层、IOC/DI 已学完。
+- 按用户要求，今天不正式学习三层架构；尚无 Service、依赖注入和连接池，也未开发签到程序。
+
+#### 十一、上传范围与验证边界
+
+- 保存当前 POM 和 src 源文件原貌；新增 Address、Result、Student、StudentDao、StudentController，更新 User、HelloController 和启动类。启动类仍保留未使用导入，HelloController 旧注释“告诉浏览器”应理解为“告诉 Spring”，不借归档重构。
+- 正式源码共 8 个 Java 文件，生成的 contextLoads 测试仍保留。
+- 当日已实际验证 /students 的数据库结果（5 条）；其他练习成功主要来自学习者反馈，不扩大成全面接口验收。
+- 归档时另做源码编译检查，javac 访问 JAR 时出现 AccessDeniedException，复制到工作区后仍受访问限制，未记为独立编译验证通过，也未重复尝试全量 Maven 构建。不能把编译器异常后的退出码误记为通过。
+- 不上传 .idea、DB_PASSWORD 实值、target、依赖缓存或数据库物理文件。本次未执行数据库增删改。
+- 历史记录按原日期保留，顶部进度以本日更新为准；后续按用户节奏继续，不默认三层架构已经开始。
 
 
 ## 记录约定
