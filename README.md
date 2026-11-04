@@ -5,7 +5,9 @@
 不要求一开始记住所有框架名字。先抓住主线：**Maven 准备项目依赖，Spring Boot 帮助启动应用，Tomcat 接收请求，Spring MVC 安排调用我们写的方法。**
 
 > 仓库记录起始：2026-10-28（Maven 历史记录）；JavaWeb 正式记录起始：2026-10-29。
-> 最近更新：2026-11-03。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
+> 最近更新：2026-11-04。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
+
+> 示例说明：本文中的人名、学号均已改为示例化表述，仅用于解释代码与请求格式，不保证与本机数据库记录对应。运行验收只记录条数、字段及行为，不公开数据库名单原值。
 
 ## 日期导航与代码目录
 
@@ -15,19 +17,22 @@
 | 2026-10-29 | JavaWeb 入门、请求响应和 Servlet 基础 | [当天记录](#2026-10-29web-入门与请求处理链路) · [Spring Boot 工程](SpringBoot_javaWeb_quickstart) |
 | 2026-11-02 | Postman、简单参数、实体参数、默认值与可选参数 | [当天问答总结](#day-2026-11-02) · [HelloController](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/Controller/HelloController.java) · [User](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/pojo/User.java) |
 | 2026-11-03 | 嵌套对象、数组/List、日期/JSON/路径参数、响应包装、JDBC 接口整合 | [当天总结](#day-2026-11-03) · [接口清单](#endpoints-2026-11-03) · [完整流程图](#flow-2026-11-03) |
+| 2026-11-04 | 三层架构、接口解耦、IOC/DI、真实/模拟查询切换与验证 | [当天问答总结](#day-2026-11-04) · [分层与注入流程图](#flow-2026-11-04) · [AI Coding 与验收](#ai-coding-2026-11-04) |
 
 
 10 月 28 日的 Maven 内容原先归档在 Database-Basics，已于 10 月 29 日复制到本仓库，保留原始来源和日期。今后 JavaWeb 及其 Maven 前置学习统一在这里接续记录；数据库仓库中的历史内容保留。
 
 ### 如何查看和运行代码
 
-- [SpringBoot_javaWeb_quickstart](SpringBoot_javaWeb_quickstart)：当前本机工程快照，最近同步日期 2026-11-03，包含 POM、启动类、Controller、资源配置、生成的测试类和 Maven Wrapper 文件。
+- [SpringBoot_javaWeb_quickstart](SpringBoot_javaWeb_quickstart)：当前本机工程快照，最近同步日期 2026-11-04，包含 POM、启动类、Controller、资源配置、生成的测试类和 Maven Wrapper 文件。
 - IDEA 打开该子目录的 pom.xml 加载工程；运行 SpringBootJavaWebQuickstartApplication 启动类，再访问 http://localhost:8080/hello。
 - 当前 POM 为 Spring Boot 4.1.2、目标 Java 17，使用 spring-boot-starter-webmvc；本机学习时选用 JDK 25。可继续使用 IDEA 配置的 Maven。Wrapper 自身配置了发行版，不等于此前 IDEA 的内置 Maven 版本。
 - [HelloController.java](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/Controller/HelloController.java) 当前返回 `Hello world!喵`。下文 `Hello world!` 是讲解时的示例，二者不矛盾。
 - 源码保留原貌。其中旧注释“告诉浏览器这是请求处理类”不准确，应理解为“告诉 Spring 这个类用于处理请求”；以下概念说明以此为准。
 - 生成的 contextLoads 测试随工程保存，本次未运行该测试。/greet、/introduce、/user-info 已保存到源码，学习者反馈相应 Postman/浏览器测试成功。/introduce 当前生效的是可选年龄版本，必填与默认 18 的旧版本保留为注释。
 - 真实学生查询：确保本机 MySQL 的 campus_learning.student 已存在（需要 student_id、name 列），在 Spring Boot 启动类运行配置中设置 DB_PASSWORD，再请求 GET /students。账号 root、localhost:3306 为本次学习环境，不应直接照搬到其他环境；不提交密码、运行配置或数据库物理文件。
+- 当前 GET /students 采用 Controller → Service → 静态 DAO → MySQL；StudentService 启用 @Service，MockStudentService 的 @Service 已注释。切换实现后需重新构建/启动并检查响应内容，不只看 200。
+- Service 代码：[查询接口](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/service/StudentQueryService.java) · [数据库实现](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/service/StudentService.java) · [模拟实现](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/service/MockStudentService.java)。
 - 新增对象/查询类：[Address](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/pojo/Address.java)、[Result](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/pojo/Result.java)、[Student](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/pojo/Student.java)、[StudentDao](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/dao/StudentDao.java)、[StudentController](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/Controller/StudentController.java)。
 - [MavenStudy](MavenStudy)：2026-10-28 从数据库仓库复制的历史快照，只有 pom.xml，包含 Logback 依赖；不要把它当作当前本机 MavenStudy 的完整镜像。
 - 两个子目录是独立工程，不是已配置好的 Maven 父子模块。根目录 README 是学习入口。
@@ -35,15 +40,17 @@
 
 ## 当前进度
 
-- 最近学习：2026-11-03，网课 Day05-03 嵌套对象、Day05-04 数组/集合、Day05-05 日期/JSON、Day05-06 路径、Day05-07～08 响应及案例的基础练习。
-- 已指导实践：嵌套 Address、数组/List 参数、日期解析、JSON 请求体、路径参数、返回 User/List、Result 响应包装。
-- 整合成果：GET /students 通过 JDBC 查询 MySQL；当日实际请求确认 HTTP 200、success=true、message=查询成功，返回 5 个学生，每项包含 studentId、name。
-- 理解进展：能描述客户端与 Java 后端的 HTTP 通信、Java 后端与 MySQL 的 JDBC 通信，以及查询结果到 JSON 的完整过程。
-- 掌握边界：以提示下编码、运行成功和理解主线为主，不等于已经能独立编写全部 SQL/JDBC。统一异常处理、日期容错、连接池等尚未实现。
-- 三层架构、IOC/DI 仅预告，按用户要求今天暂停；当前 Controller 直接建立连接，调用静态 DAO，尚无 Service 层。
-- 后续学习方式：面向 AI Coding，以需求、小功能实现、关键代码解释和亲自验证为主，不以默写样板代码为目标。
-- 会话管理、文件上传下载、完整前后端页面联调仍待学习。AIFoundry 仅于 11 月 2 日了解公开路线；签到程序仍为讨论。
-- 10 月 30 日 UDP 练习归档在 [Java-Basics](https://github.com/theotherDancer/Java-Basics/tree/main/NetworkProgramming)，不混记为本日新增实践。
+- 最近学习：2026-11-04，对应网课 Day05-09～13 的三层架构、分层解耦及 IOC/DI 基础；已做指导实践，不代表相关细节全部掌握。
+- 已完成请求响应基础：简单与实体参数、嵌套对象、数组/List、日期/JSON/路径参数、对象/List 响应及 Result 包装。
+- 当前结构：Controller 接收请求、包装响应；Service 组织查询并管理本例 JDBC 连接；DAO 执行 SQL、读取结果。
+- 解耦实践：Controller 依赖 StudentQueryService 接口；Spring 通过唯一构造方法注入实现对象。已体验数据库与模拟实现切换，当前恢复数据库实现。
+- 当日运行证据：Service 源文件 21:23:32 修改，8080 对应 Java 进程 21:35:57 启动；随后实际 GET /students 返回 HTTP 200、success=true 和 5 条非模拟学生记录。未逐条对照数据库原始记录，不扩大为异常/并发或全部接口验收通过。
+- 当前仅查询全部学生；GET /students/{studentId} 仍只回显学号，真正按学号查库尚未实现。
+- 掌握边界：能在指导下改造和测试、解释基本调用链；独立拆需求和完整编码仍需练习。DAO 仍是静态调用；统一异常处理、连接池、多实现选择等尚未实践。
+- 学习方式：围绕实际小功能推进，并加入如何指挥 AI、限定改动、核验运行版本和验收结果。
+- 下一步：按学号真实查询，分别验证查到、未找到与查询失败，沿用现有三层结构。
+- 会话管理、文件上传下载、前端页面与联调仍待正式学习；签到程序仍为讨论。题外交流不记为 JavaWeb 核心进度。
+- 历史记录保留各自日期的代码状态；旧章节中的“当前/尚未”请结合日期阅读，最新状态以本节和 11 月 4 日章节为准。
 
 ## 学习路线
 
@@ -51,6 +58,7 @@
 |---|---|---|
 | Web 应用概览 | HTTP、Tomcat、创建与访问应用 | 已完成首轮入门，持续巩固 |
 | Servlet 核心技术 | 概述、生命周期、配置、请求响应、乱码、ServletContext | 已理解调用关系和生命周期；当前借助 Spring MVC 实践请求参数，其余未完成 |
+| 分层与 Spring 基础 | Controller/Service/DAO、接口解耦、IOC、构造方法 DI | 2026-11-04 已完成首轮指导实践；多实现选择等待巩固 |
 | 会话状态管理 | Cookie、Session、登录状态保持 | 待正式学习 |
 | 文件上传与下载 | 上传与下载实操 | 待学习 |
 | 前后端分离技术 | MVC、JSON、Axios、跨域 | 待学习 |
@@ -73,6 +81,9 @@
 - [11 月 3 日：参数、响应、JDBC 问答总结](#day-2026-11-03)
 - [当前接口清单与调用示例](#endpoints-2026-11-03)
 - [HTTP 与 JDBC 完整流程图](#flow-2026-11-03)
+- [11 月 4 日：三层架构与分层解耦问答](#day-2026-11-04)
+- [Spring 创建对象与构造方法注入流程图](#flow-2026-11-04)
+- [AI Coding 提示词与证据验收](#ai-coding-2026-11-04)
 - [每日学习记录](#每日学习记录)
 
 ## 工具和框架的关系
@@ -202,7 +213,7 @@ public class HelloController {
 ### URL 和参数是什么关系？
 
 ```text
-http://localhost:8080/students?studentId=2026001
+http://localhost:8080/students?studentId=DEMO001
 │      │         │    │        └─ 查询参数：指定学号
 │      │         │    └─ 请求路径
 │      │         └─ 端口
@@ -360,7 +371,7 @@ Cookie、Session、登录保持和多用户并发数据问题，本日不作为�
 
 **下次接续**
 
-在现有项目中实践 /greet?name=小林，学习 @RequestParam 如何接收参数；尚未确认该示例完成。
+在现有项目中实践 /greet?name=示例甲，学习 @RequestParam 如何接收参数；尚未确认该示例完成。
 
 
 <a id="day-2026-11-02"></a>
@@ -394,9 +405,9 @@ Postman 发 GET /hello → 服务器返回给 Postman
 
 | 请求 | 对应方法 | 当前接收方式 |
 |---|---|---|
-| GET /greet?name=小林 | greet | 单个必填字符串 |
-| GET /introduce?name=小林&age=20 | introduce | 简单参数分别接收 |
-| GET /user-info?name=小林&age=20 | userInfo | User 对象接收 |
+| GET /greet?name=示例甲 | greet | 单个必填字符串 |
+| GET /introduce?name=示例甲&age=20 | introduce | 简单参数分别接收 |
+| GET /user-info?name=示例甲&age=20 | userInfo | User 对象接收 |
 
 `/hello` 保留原来的 @RequestMapping，未限制为 GET；以上三个新增方法采用 @GetMapping。
 
@@ -407,7 +418,7 @@ Postman 发 GET /hello → 服务器返回给 Postman
 ```
 
 ```text
-请求里的 name → 按注解名字找到“小林” → 交给形参 username
+请求里的 name → 按注解名字找到“示例甲” → 交给形参 username
 ```
 
 可改名的是 Java 形参；请求要按注解指定的 name 传。只传 username 不等于提供了必需的 name。请求参数顺序可以交换，绑定仍然按名字进行。
@@ -455,7 +466,7 @@ public String userInfo(User user) {
 
 ```java
 User user = new User();
-user.setName("小林");
+user.setName("示例甲");
 user.setAge(20);
 userInfo(user);
 ```
@@ -481,7 +492,7 @@ userInfo(user);
 
 #### 多个客户端同时访问，会混参数吗？
 
-每次方法调用的形参和局部变量各自独立，浏览器的小林与 Postman 的小周分别处理、分别返回。通常请求由服务器工作线程并发处理，完成顺序不保证等同发送顺序。
+每次方法调用的形参和局部变量各自独立，浏览器的示例甲与 Postman 的示例乙分别处理、分别返回。通常请求由服务器工作线程并发处理，完成顺序不保证等同发送顺序。
 
 Controller 通常是单例，实例字段可能共享，不应随意把“当前姓名”存进字段。这是概念提醒，本日未进行多线程实验，不记为系统掌握并发。
 
@@ -490,7 +501,7 @@ Controller 通常是单例，实例字段可能共享，不应随意把“当前
 实际出现过：
 
 ```text
-/introduce?name=小林&age=&name=小林&age=20
+/introduce?name=示例甲&age=&name=示例甲&age=20
 ```
 
 姓名在响应中重复，年龄却显示未填写。不能假设后一个同名参数总覆盖前一个；简单值、数组等目标类型会影响转换。
@@ -611,7 +622,7 @@ Postman 没填的占位行不等于 new User()；取消勾选不会发送，hobb
 |---|---|---|
 | 日期 | LocalDateTime + @DateTimeFormat | 输入格式 yyyy-MM-dd HH:mm:ss；MM 是月、mm 是分 |
 | JSON | @RequestBody User user | Body → raw → JSON，发送 Content-Type: application/json |
-| 路径 | @PathVariable("studentId") String id | /students/2026001 中取出学号，不是查询参数 |
+| 路径 | @PathVariable("studentId") String id | /students/DEMO001 中取出学号，不是查询参数 |
 
 日期参数曾返回 400，截图中值前有多余空白，清理后反馈成功。我们讨论了客户端选择器、后端 strip 清理、解析异常给出友好 400，但**当前源码未实现这些容错改动**。不能解析时不应偷偷替换成当前时间。LocalDateTime 默认转字符串可能出现 T，与输入解析格式不是同一回事。
 
@@ -763,6 +774,227 @@ Result 是内存对象，JSON 是对象数据的文本表示，不是把 Java �
 - 归档时另做源码编译检查，javac 访问 JAR 时出现 AccessDeniedException，复制到工作区后仍受访问限制，未记为独立编译验证通过，也未重复尝试全量 Maven 构建。不能把编译器异常后的退出码误记为通过。
 - 不上传 .idea、DB_PASSWORD 实值、target、依赖缓存或数据库物理文件。本次未执行数据库增删改。
 - 历史记录按原日期保留，顶部进度以本日更新为准；后续按用户节奏继续，不默认三层架构已经开始。
+
+
+
+<a id="day-2026-11-04"></a>
+
+### 2026-11-04：把查询学生整理成三层，理解对象为何能协作
+
+今天围绕已运行的 GET /students 完成结构改造。重点是理解职责、引用和调用，不要求默写框架样板代码。聊天存储、长期记忆和多 Agent 上下文只作题外了解，不计入本日核心进度。
+
+#### 一、Controller 是整体业务负责人吗？最后一层是什么？
+
+Controller 负责 HTTP 请求与 Java 业务之间的衔接；Service 负责组织业务；DAO 负责具体数据库操作。MySQL 是外部存储，不是 Java 三层中的一层。
+
+| 层 | 当前类 | 本例具体工作 |
+|---|---|---|
+| Controller | StudentController | 匹配 GET /students，调用 Service，把列表包装为 Result |
+| Service | StudentService | 读取连接配置，建立连接，调用 DAO，返回列表并关闭连接 |
+| DAO | StudentDao | 准备并执行 SELECT，读取 ResultSet，生成 Student 列表 |
+
+当前 Service 业务规则很少，主要转交查询，仍可用于认识分工。以后签到业务中，Service 可以判断是否有排班、是否重复签到，DAO 才执行查询和保存。当前连接管理写在 Service 是沿用 JDBC 的学习安排，不是说真实项目必须都这么写。
+
+HTTP 的解析、请求分发、JSON 转换和响应发送，由 Tomcat、Spring MVC 等组件与我们的代码配合完成；Controller 不必手动实现整套 HTTP。
+
+#### 二、Service 与 DAO 不同包，为什么能调用？
+
+当前调用为：
+
+```java
+return StudentDao.findAll(connection);
+```
+
+- StudentDao 类和 findAll 方法都是 public，允许跨包访问。
+- import 指明短类名对应哪个完整类名，不授予访问权限；也可以直接写完整类名。
+- findAll 是 static，通过类名调用，无须先 new DAO。
+- connection 是参数：Service 提供已有数据库连接，DAO 使用后返回列表；DAO 不需要知道是谁调用自己。
+
+对比：
+
+```java
+studentService.findAll();          // 实例方法，通过对象引用调用
+StudentDao.findAll(connection);    // 静态方法，通过类名调用
+```
+
+DAO 创建并关闭 statement、resultSet；Service 创建并关闭 connection。return 在 try-with-resources 内也仍会执行资源关闭。当前 DAO 没有注入，不必把所有层间调用都想成 Spring 自动完成。
+
+| 成员权限 | 本类 | 同包其他类 | 跨包子类 | 跨包普通类 |
+|---|---|---|---|---|
+| private | 可以 | 不可以 | 不可以 | 不可以 |
+| 不写修饰符（包级） | 可以 | 可以 | 不可以 | 不可以 |
+| protected | 可以 | 可以 | 有继承及访问方式限制 | 不可以 |
+| public | 可以 | 可以 | 可以 | 可以 |
+
+以上是普通成员访问的基础概览；普通顶层类只可使用 public 或包级访问。子包与父包也不是同一个包。不同模块还可能涉及模块导出规则，本日未展开。
+
+static 更适合不依赖某个实例状态的操作，例如 Math.max。静态方法没有 this，不能直接访问实例成员，也不参与实例方法的重写和动态选择；明确持有对象引用时仍可以访问允许访问的实例成员。static 不意味着天然更快或更好。
+
+#### 三、类已经实现接口，变量前面为什么还写接口名？
+
+新增 StudentQueryService：
+
+```java
+public interface StudentQueryService {
+    List<Student> findAll() throws SQLException;
+}
+```
+
+无方法体的这条接口方法声明默认是 public abstract。接口和抽象方法不是二选一；抽象类也可定义抽象方法并支持多态。当前只是约定查询能力，无共同实例状态要继承，选择接口即可。
+
+```java
+public class StudentService implements StudentQueryService {
+    // 实现 findAll()
+}
+```
+
+implements 声明类的实现关系；下面则是变量声明与赋值：
+
+```java
+StudentQueryService studentService = new StudentService();
+```
+
+| 部分 | 作用 |
+|---|---|
+| StudentQueryService | 引用变量的类型，编译时据此检查可调用的方法 |
+| studentService | 变量名字，可以换成其他合法名字 |
+| new StudentService() | 创建真实的实现类对象 |
+| studentService.findAll() | 实际执行该对象对应的实例方法实现 |
+
+类可以增加接口未声明的方法，但不能直接通过接口类型变量调用额外方法。多个接口可共用同一个兼容实现；无继承关系的接口若提供冲突 default 方法，需要类明确重写；返回类型不兼容的同签名要求不能这样同时实现；业务规则矛盾则需人设计，编译器未必能发现。
+
+#### 四、IOC 与 DI：字段哪里来，谁把对象交给 Controller？
+
+改造前，Controller 自己创建对象：
+
+```java
+private final StudentQueryService studentService = new StudentService();
+```
+
+改造后，Controller 接收对象引用：
+
+```java
+private final StudentQueryService studentService;
+
+public StudentController(StudentQueryService studentService) {
+    this.studentService = studentService;
+}
+```
+
+- 字段由我们声明，不是 Spring 自动往类里加变量。
+- 构造参数是暂时接收引用的变量；this.studentService 是当前对象的字段。
+- 赋值保存引用，没有复制出第二个 Service 对象。
+- final 表示字段赋值后不能再指向另一个对象，不代表对象内部状态自动不可变。
+- Spring 安排创建对象并传入参数；普通构造方法本身不会主动寻找依赖。
+
+如果手动组织，理解上类似下面两行，不必复制到启动类：
+
+```java
+StudentQueryService service = new StudentService();
+StudentController controller = new StudentController(service);
+```
+
+| 概念 | 当前实践 |
+|---|---|
+| IOC（控制反转） | Service 创建、管理交给 Spring IOC 容器 |
+| DI（依赖注入） | Spring 把符合接口类型的对象引用传入 Controller 构造方法 |
+
+Spring Boot 帮助配置、启动 Spring 应用，具体对象管理由 Spring 容器承担。StudentService 的 @Service、StudentController 的 @RestController 使默认扫描能发现并管理它们；本例包位于启动类所在包之下。Controller 只有一个构造方法，因此可以省略构造方法上的 @Autowired。其他注入方式只是提及，未要求本日掌握。
+
+<a id="flow-2026-11-04"></a>
+
+#### 五、流程图：启动时安排对象，请求时调用方法
+
+```mermaid
+flowchart TD
+    subgraph START["启动：创建与注入"]
+        A["运行 Spring Boot 启动类"] --> B["组件扫描"]
+        B --> C["发现启用 @Service 的实现类"]
+        C --> D["创建并管理 StudentService Bean"]
+        B --> E["发现 @RestController"]
+        E --> F["检查 StudentController 唯一构造方法"]
+        D --> G["按 StudentQueryService 类型提供对象"]
+        F --> G
+        G --> H["构造参数接收引用"]
+        H --> I["this.studentService 保存引用"]
+        I --> J["建立请求映射，等待访问"]
+    end
+    subgraph REQUEST["请求：三层调用"]
+        K["客户端 GET /students"] --> L["Tomcat 与 Spring MVC"]
+        L --> M["StudentController.findAll"]
+        M --> N["studentService.findAll"]
+        N --> O["Service 创建 JDBC Connection"]
+        O --> P["StudentDao.findAll(connection)"]
+        P --> Q[("MySQL")]
+        Q --> R["DAO 读取结果，生成 List<Student>"]
+        R --> S["DAO 关闭 statement 和 ResultSet"]
+        S --> T["Service 返回列表并关闭 Connection"]
+        T --> U["Controller 包装 Result"]
+        U --> V["框架转换 JSON 并发送响应"]
+    end
+    J -. "准备完成" .-> L
+```
+
+Controller 与 Service 的联系是 Java 对象引用；Service 与数据库的连接是 JDBC Connection，两者不要混为一谈。默认作用域下 Controller、Service 通常复用，但本例每次数据库查询仍新建、关闭连接；复用 Bean 不意味着字段自动线程安全。
+
+#### 六、分层解耦有什么实际作用？模拟实验给出了答案
+
+新增 MockStudentService，同样实现 StudentQueryService，直接返回 mock001、mock002 两个虚构学生，不调用 DAO，也不必声明 SQLException。实现方法可以不声明接口允许抛出的受检异常。
+
+```mermaid
+flowchart TD
+    A["StudentController<br/>通过接口调用 findAll"] --> B["StudentQueryService<br/>统一查询约定"]
+    B --> C["StudentService<br/>DAO 查询数据库"]
+    B --> D["MockStudentService<br/>直接返回虚构名单"]
+```
+
+切换过程：注释数据库实现 @Service，为模拟实现添加 @Service，重启后请求同一个 /students；Controller 查询代码不变，学习者反馈得到两个模拟学生。随后反向切换并恢复数据库实现，作为本次归档状态。
+
+@Service 可以标在多个类上，Spring 可以创建多个对象。遇到同一接口的多个候选，问题在于单个参数该选谁；@Primary、@Qualifier 和集合注入仅介绍，未实践。构造参数名 studentService 也可能匹配原实现默认 Bean 名，所以不能断言两个实现同时注册一定报错；需要明确选择时应明确配置。
+
+解耦不是取消依赖，而是减少对具体实现及创建方式的依赖。现在 Controller 只要求查询能力；创建与选择交给容器，模拟测试、替换数据来源更方便。当前 Service 仍直接调用静态 DAO，不宣称所有层都完全解耦。
+
+<a id="ai-coding-2026-11-04"></a>
+
+#### 七、AI Coding：如何指挥实现，怎样严谨验收？
+
+以后每次小功能加入提示词训练：说清输入输出和业务目标，要求先读现有代码、限定修改范围、复用已有结构，再按可观察结果验收。AI 可写重复代码，人负责业务、关键判断和证据。
+
+可参考的提示词：
+
+> 阅读现有学生查询代码，沿用三层结构，让 Controller 通过接口和构造方法注入 Service。只修改必要文件，保持请求路径与响应结构一致。先解释方案，再修改。验证时确认当前运行服务加载了本次代码，检查响应实际数据，分别报告源码检查、构建、运行测试和未验证项。
+
+本日重要教训：首次仅看见注解切换正确，又收到“请求成功”的反馈，却没有确认用户是否重启。用户指出当时没有重启，因此该次成功可能是旧模拟程序的响应。不能据此宣布新配置生效。
+
+后续取得的实际证据如下（2026-11-04，本机时间）：
+
+| 证据 | 观察 |
+|---|---|
+| 源文件 | 两个 Service 文件最后修改于 21:23:32 |
+| 运行进程 | 8080 对应 Java 进程在 21:35:57 启动，晚于修改 |
+| 实际工具请求 | GET /students 返回 HTTP 200、success=true、message=查询成功 |
+| 响应内容 | 5 条学生记录，每条有 studentId、name，不是两个模拟学生 |
+| 源码配置 | StudentService 启用 @Service，MockStudentService 注释 @Service |
+
+这些证据支持“修改后启动的服务已正常返回数据库实现对应名单”。本次没有逐条直接对照数据库原始记录，没有系统验证空表、断库、并发或全部接口；也未单独重新执行 Maven 全构建或生成的 contextLoads 测试。过程没有由工具替用户重启程序或修改数据库。
+
+验收习惯：
+
+1. 源码检查、编译、运行版本、用户反馈和独立运行测试分开记录。
+2. 需要重新启动/构建/部署的修改，核对实际运行目标及生效证据；磁盘文件不等于运行中的程序。
+3. 检查内容和行为，不只看 200 或代码设置的 success=true。
+4. 按改动覆盖必要的成功、失败、边界场景；未执行的不能声称通过。
+5. 工具权限失败说明无法取得证据，不能直接判断应用故障或成功。
+
+#### 八、今日掌握程度、归档状态与下次起点
+
+- 已完成基础指导实践：三层职责、接口多态、单构造方法注入、真实与模拟实现切换。能解释关系，不等于已独立掌握复杂业务设计。
+- 新增 StudentQueryService、StudentService、MockStudentService；修改 StudentController。其他已跟踪源码和构建文件与上次归档对照，忽略 CRLF/LF 差异后无内容变化。
+- 代码保留用户原貌，MockStudentService 的 @Service 注释及未使用 import 也保留，不借上传重构。
+- 当前恢复数据库实现；DAO 仍是 static findAll。按学号查库尚未实现，/students/{studentId} 仍只回显学号。
+- 后续围绕“按学号查询”继续：Controller 接收 → Service 组织 → DAO 参数化 SQL；区分未找到与查询异常，验收存在/不存在等情况。
+- 归档只保存必要源码与学习文档，不包含 .idea、密码值、target、依赖缓存或数据库物理文件。
+- 题外话仅涉及聊天存储、长期记忆、多 Agent 上下文协作；不展开为本日 JavaWeb 知识点。
 
 
 ## 记录约定
