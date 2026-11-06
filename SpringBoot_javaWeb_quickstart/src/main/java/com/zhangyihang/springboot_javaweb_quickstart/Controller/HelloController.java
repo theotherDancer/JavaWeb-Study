@@ -93,7 +93,7 @@ public class HelloController {
                 + "，城市：" + address.getCity()
                 + "，区县：" + address.getDistrict();
     }
-    @GetMapping("/students/{studentId}")
+    @GetMapping("/student-id-echo/{studentId}")
     public String studentDetail(
             @PathVariable("studentId") String id) {
 

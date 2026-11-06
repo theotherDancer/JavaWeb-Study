@@ -5,7 +5,7 @@
 不要求一开始记住所有框架名字。先抓住主线：**Maven 准备项目依赖，Spring Boot 帮助启动应用，Tomcat 接收请求，Spring MVC 安排调用我们写的方法。**
 
 > 仓库记录起始：2026-10-28（Maven 历史记录）；JavaWeb 正式记录起始：2026-10-29。
-> 最近更新：2026-11-05。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
+> 最近更新：2026-11-06。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
 
 > 示例说明：本文中的人名、学号均已改为示例化表述，仅用于解释代码与请求格式，不保证与本机数据库记录对应。运行验收只记录条数、字段及行为，不公开数据库名单原值。
 
@@ -18,20 +18,21 @@
 | 2026-11-02 | Postman、简单参数、实体参数、默认值与可选参数 | [当天问答总结](#day-2026-11-02) · [HelloController](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/Controller/HelloController.java) · [User](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/pojo/User.java) |
 | 2026-11-03 | 嵌套对象、数组/List、日期/JSON/路径参数、响应包装、JDBC 接口整合 | [当天总结](#day-2026-11-03) · [接口清单](#endpoints-2026-11-03) · [完整流程图](#flow-2026-11-03) |
 | 2026-11-04 | 三层架构、接口解耦、IOC/DI、真实/模拟查询切换与验证 | [当天问答总结](#day-2026-11-04) · [分层与注入流程图](#flow-2026-11-04) · [AI Coding 与验收](#ai-coding-2026-11-04) |
-| 2026-11-05 | 考勤实战脱敏节选：身份、权限、分层、JPA/JDBC 与 Prompt | [当天总结](#day-2026-11-05) · [教学节选与来源声明](notes/2026-11-05/attendance-excerpts.md) · [Prompt](#ai-coding-2026-11-05) |
+| 2026-11-06 | 按学号查询、POST 新增、业务校验、重复处理与边界验收 | [当天总结](#day-2026-11-06) · [新增流程图](#flow-2026-11-06) · [测试范围](#tests-2026-11-06) · [AI Coding](#ai-coding-2026-11-06) |
 
 
 10 月 28 日的 Maven 内容原先归档在 Database-Basics，已于 10 月 29 日复制到本仓库，保留原始来源和日期。今后 JavaWeb 及其 Maven 前置学习统一在这里接续记录；数据库仓库中的历史内容保留。
 
 ### 如何查看和运行代码
 
-- [SpringBoot_javaWeb_quickstart](SpringBoot_javaWeb_quickstart)：当前本机工程快照，最近同步日期 2026-11-04，包含 POM、启动类、Controller、资源配置、生成的测试类和 Maven Wrapper 文件。
+- [SpringBoot_javaWeb_quickstart](SpringBoot_javaWeb_quickstart)：当前本机工程快照，最近同步日期 2026-11-06，包含 POM、启动类、Controller、资源配置、生成的测试类和 Maven Wrapper 文件。
 - IDEA 打开该子目录的 pom.xml 加载工程；运行 SpringBootJavaWebQuickstartApplication 启动类，再访问 http://localhost:8080/hello。
 - 当前 POM 为 Spring Boot 4.1.2、目标 Java 17，使用 spring-boot-starter-webmvc；本机学习时选用 JDK 25。可继续使用 IDEA 配置的 Maven。Wrapper 自身配置了发行版，不等于此前 IDEA 的内置 Maven 版本。
 - [HelloController.java](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/Controller/HelloController.java) 当前返回 `Hello world!喵`。下文 `Hello world!` 是讲解时的示例，二者不矛盾。
 - 源码保留原貌。其中旧注释“告诉浏览器这是请求处理类”不准确，应理解为“告诉 Spring 这个类用于处理请求”；以下概念说明以此为准。
 - 生成的 contextLoads 测试随工程保存，本次未运行该测试。/greet、/introduce、/user-info 已保存到源码，学习者反馈相应 Postman/浏览器测试成功。/introduce 当前生效的是可选年龄版本，必填与默认 18 的旧版本保留为注释。
-- 真实学生查询：确保本机 MySQL 的 campus_learning.student 已存在（需要 student_id、name 列），在 Spring Boot 启动类运行配置中设置 DB_PASSWORD，再请求 GET /students。账号 root、localhost:3306 为本次学习环境，不应直接照搬到其他环境；不提交密码、运行配置或数据库物理文件。
+- 真实学生查询：确保本机 MySQL 的 campus_learning.student 已存在（查询需要 student_id、name 列；新增还需要 age 列，student_id 应有主键或唯一约束），在 Spring Boot 启动类运行配置中设置 DB_PASSWORD，再请求 GET /students。账号 root、localhost:3306 为本次学习环境，不应直接照搬到其他环境；不提交密码、运行配置或数据库物理文件。
+- 新增请求类：[StudentCreateRequest](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/pojo/StudentCreateRequest.java)。当前 POST /students 会真正写入练习数据库；请只使用虚构数据，重复发送同一学号应被拒绝。
 - 当前 GET /students 采用 Controller → Service → 静态 DAO → MySQL；StudentService 启用 @Service，MockStudentService 的 @Service 已注释。切换实现后需重新构建/启动并检查响应内容，不只看 200。
 - Service 代码：[查询接口](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/service/StudentQueryService.java) · [数据库实现](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/service/StudentService.java) · [模拟实现](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/service/MockStudentService.java)。
 - 新增对象/查询类：[Address](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/pojo/Address.java)、[Result](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/pojo/Result.java)、[Student](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/pojo/Student.java)、[StudentDao](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/dao/StudentDao.java)、[StudentController](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/Controller/StudentController.java)。
@@ -41,30 +42,29 @@
 
 ## 当前进度
 
-- 最近学习（2026-11-05）：只读已有考勤实战的脱敏学习片段，复习身份/权限、构造方法 DI 与分层，初步理解 JPA/Repository 和 JDBC 的关系；非本人编写，非完整项目归档，未新增运行验证。
-- 当前实战阅读停点：取得组织成员列表；后续从数据整理进入计算。自己的学生查询工程仍为 11 月 4 日版本，下列旧进度描述该工程，不因阅读节选而改变。
-
-- 自有练习最近编码：2026-11-04，对应网课 Day05-09～13 的三层架构、分层解耦及 IOC/DI 基础；已做指导实践，不代表相关细节全部掌握。
-- 已完成请求响应基础：简单与实体参数、嵌套对象、数组/List、日期/JSON/路径参数、对象/List 响应及 Result 包装。
-- 当前结构：Controller 接收请求、包装响应；Service 组织查询并管理本例 JDBC 连接；DAO 执行 SQL、读取结果。
-- 解耦实践：Controller 依赖 StudentQueryService 接口；Spring 通过唯一构造方法注入实现对象。已体验数据库与模拟实现切换，当前恢复数据库实现。
-- 当日运行证据：Service 源文件 21:23:32 修改，8080 对应 Java 进程 21:35:57 启动；随后实际 GET /students 返回 HTTP 200、success=true 和 5 条非模拟学生记录。未逐条对照数据库原始记录，不扩大为异常/并发或全部接口验收通过。
-- 当前仅查询全部学生；GET /students/{studentId} 仍只回显学号，真正按学号查库尚未实现。
-- 掌握边界：能在指导下改造和测试、解释基本调用链；独立拆需求和完整编码仍需练习。DAO 仍是静态调用；统一异常处理、连接池、多实现选择等尚未实践。
-- 学习方式：围绕实际小功能推进，并加入如何指挥 AI、限定改动、核验运行版本和验收结果。
-- 下一步：按学号真实查询，分别验证查到、未找到与查询失败，沿用现有三层结构。
-- 会话管理、文件上传下载、前端页面与联调仍待正式学习；签到程序仍为讨论。题外交流不记为 JavaWeb 核心进度。
-- 历史记录保留各自日期的代码状态；旧章节中的“当前/尚未”请结合日期阅读，最新状态以本节和对应最新日期章节为准。
+- 最近编码与学习：2026-11-06，复习按学号查询，并完成 POST 新增学生的基础闭环；源码已归档，测试证据见 [本日测试表](#tests-2026-11-06)。
+- 自有练习当前能力：GET /students 查询全部、GET /students/{studentId} 查询数据库中指定学生、POST /students 接收 JSON 并校验后新增。
+- 旧路径参数回显练习改为 GET /student-id-echo/{studentId}，避免与真实查询映射冲突。
+- 结构延续：Controller 处理请求和响应；Service 校验、查重、建立本例 JDBC 连接；静态 DAO 执行参数化 SQL。通过接口与构造方法注入使用 Service。
+- 新增规则：学号、姓名、年龄必填；学号和姓名不能只有空白；年龄 0～150；重复学号不得覆盖原记录。唯一约束保留，Controller 对 MySQL 1062 作重复提示。
+- 当前启用数据库 StudentService；模拟实现支持查询，create 明确抛出不支持异常，不假报保存成功。
+- 已由学习者验证：正常新增与查询、重复拒绝及原姓名未覆盖、年龄缺失和 -1/151 拒绝、0/150 合法且 Workbench 核对年龄、空白学号/姓名拒绝且未新增。详见本日章节，不扩大为全场景验证。
+- 工具已检查本日源码、进程与只读查询；上传阶段不重复发送写请求，不宣称独立复测全部业务或 Maven 全构建通过。
+- 边界：并发重复、超长输入、数据库故障、正式环境部署等未验收；数据库结构仍由练习环境提供，不因提交源码自动创建。
+- 自定义异常、统一错误响应及 201/400/409 等状态码改造仅预告，用户要求先暂停，尚未实施；目前部分业务失败仍返回 HTTP 200，需看 Result。
+- 后续继续：整理错误响应，然后按实际小功能补充知识和测试；AI Coding 侧重需求、最小修改、运行生效证据与验收。
+- 会话、上传下载、前端页面联调等仍待正式学习。保密材料、内部项目与网络配置不在本次公开归档范围。
+- 历史章节中的“当前/尚未”按各自日期理解，最新状态以本节与 11 月 6 日章节为准。
 
 ## 学习路线
 
-新增实战阅读支线：以少量脱敏节选对照已有基础；JPA 尚未实操，不等于完成 Spring Boot/JPA 系统课程。
 
 | 目录板块 | 内容 | 状态 |
 |---|---|---|
 | Web 应用概览 | HTTP、Tomcat、创建与访问应用 | 已完成首轮入门，持续巩固 |
 | Servlet 核心技术 | 概述、生命周期、配置、请求响应、乱码、ServletContext | 已理解调用关系和生命周期；当前借助 Spring MVC 实践请求参数，其余未完成 |
 | 分层与 Spring 基础 | Controller/Service/DAO、接口解耦、IOC、构造方法 DI | 2026-11-04 已完成首轮指导实践；多实现选择等待巩固 |
+| 学生查询与新增实践 | 路径参数、JSON、JDBC、校验、查重、边界测试 | 2026-11-06 已完成基础指导实践；错误响应待完善 |
 | 会话状态管理 | Cookie、Session、登录状态保持 | 待正式学习 |
 | 文件上传与下载 | 上传与下载实操 | 待学习 |
 | 前后端分离技术 | MVC、JSON、Axios、跨域 | 待学习 |
@@ -90,9 +90,9 @@
 - [11 月 4 日：三层架构与分层解耦问答](#day-2026-11-04)
 - [Spring 创建对象与构造方法注入流程图](#flow-2026-11-04)
 - [AI Coding 提示词与证据验收](#ai-coding-2026-11-04)
-- [11 月 5 日：考勤实战节选与学习边界](#day-2026-11-05)
-- [11 月 5 日：调用链](#flow-2026-11-05) · [Prompt 练习](#ai-coding-2026-11-05)
-- [脱敏教学节选与作者归属](notes/2026-11-05/attendance-excerpts.md)
+- [11 月 6 日：按学号查询与新增学生问答](#day-2026-11-06)
+- [新增学生完整流程](#flow-2026-11-06) · [本日测试范围](#tests-2026-11-06)
+- [AI Coding：需求、数据与证据边界](#ai-coding-2026-11-06)
 - [每日学习记录](#每日学习记录)
 
 ## 工具和框架的关系
@@ -1007,85 +1007,187 @@ flowchart TD
 
 
 
-<a id="day-2026-11-05"></a>
+<a id="day-2026-11-06"></a>
 
-### 2026-11-05：从考勤实战节选复习身份、权限、分层与数据访问
+### 2026-11-06：按学号查询到新增学生，建立输入、业务与数据库的联系
 
-今天只读一个已有考勤实战项目，围绕“看板请求 → 身份与权限 → 开始读取组织成员”逐步拆解，没有修改或运行原项目。
+本日围绕自有 Spring Boot 练习工程学习。按学号查询方法于此前开始添加，本日复习并完成 Web 接入、排错与反馈验收；新增功能在本日逐步接通。只记录学习代码和可公开的通用经验，测试使用虚构数据，不保存数据库名单原值。
 
-**来源声明：本次考勤代码不是我编写的，也不是我独立完成的项目。** [脱敏教学节选](notes/2026-11-05/attendance-excerpts.md) 由原项目少量片段节选、脱敏及教学改写而来，AI 协助归档。仅公开本次知识点所需短片段，不公开完整源码、机构标识、内部部署与配置、真实人员数据或完整业务算法。原作者及版权归原权利人。
+#### 一、三层架构已经学过，这次真正变化在哪里？
 
-#### 一、通过哪些部分学习了什么
+| 查询全部 | 按学号查询 |
+|---|---|
+| 无学号参数 | Controller → Service → DAO 逐层传学号 |
+| SELECT 所有记录 | WHERE student_id = ? |
+| while 读取多行 | 主键等值查询用 if 判断一行 |
+| 返回 List<Student> | 返回 Student 或 null |
 
-| 阅读部分 | 复习或新认识 | 当前边界 |
+DAO 的 findById 接收 Connection 与 studentId；Service 只接收学号，自己准备连接。Controller 用 @PathVariable 取得路径中的学号。
+
+```text
+请求中的学号
+  → Controller 接收
+  → Service 建立连接
+  → DAO 绑定 SQL 参数、执行查询
+  → Student 或 null
+  → Controller 包装 Result
+  → 框架生成 JSON 响应
+```
+
+getConnection 才是尝试连接 MySQL；prepareStatement 使用已有连接准备 SQL，不是再次连接。executeQuery 返回本次查询的 ResultSet，读取位置最初在第一行之前，next 尝试移动并返回 boolean，getString 读取当前行的列。
+
+找到学生返回对象；查询正常但未找到返回 null；查询异常向外抛出，不能用 null 混淆故障。DAO 关闭自己创建的 statement、resultSet，Service 关闭本例 connection。普通 Student 对象在连接关闭后仍能读取并序列化。
+
+原 HelloController 的学号回显路径调整为 /student-id-echo/{studentId}，真实查询在 StudentController 中使用 /students/{studentId}。添加接口前先排查映射冲突。
+
+#### 二、JSON 上传后，是不是已经保存数据库？
+
+最初 POST 演示只做：
+
+```java
+return new Result(true, "已接收，尚未保存", request);
+```
+
+当时 @RequestBody 将 JSON 转成 StudentCreateRequest，Controller 原样包装返回，未调用 Service、DAO，不产生数据库新增记录。内存对象不等于持久化数据。
+
+新增请求类包含 String studentId、String name、Integer age 以及 getter/setter。Integer 区分缺失值 null 和合法数字 0。请求类用于接收输入，Student 用于承载查询结果，Result 用于响应包装，职责不同。
+
+客户端发出 JSON 并不会自动告诉后端“新增”。请求方式和路径先匹配方法，再由方法代码决定执行什么：
+
+| 请求 | 当前行为 |
+|---|---|
+| GET /students | 查询全部学生 |
+| GET /students/{studentId} | 查询数据库中的指定学生 |
+| GET /student-id-echo/{studentId} | 回显学号的历史练习 |
+| POST /students | 接收 JSON，调用新增业务 |
+
+方法名 create 不是自动保存指令。Controller 接入 studentService.create(request) 后才真正运行校验、查重及 INSERT。
+
+#### 三、Service 中的业务规则
+
+```java
+studentId == null || studentId.isBlank()
+name == null || name.isBlank()
+age == null || age < 0 || age > 150
+```
+
+- 学号、姓名、年龄必填。
+- isBlank 识别空字符串和只有空白的字符串。
+- || 短路：前面已为 true 就不再执行后面的表达式，因此可先判 null，再调用方法或比较数值。
+- 0、150 是允许值，-1、151 超范围。
+- 学号已存在时拒绝新增，不覆盖原记录。
+
+create 的顺序是：validateCreateRequest → 建立连接 → DAO 按学号查重 → DAO 插入 → 核对 rows == 1。输入检查先于建立连接。只有定义校验方法但不调用时，校验不会自动生效。
+
+#### 四、DAO 插入与参数绑定
+
+```sql
+INSERT INTO student (student_id, name, age) VALUES (?, ?, ?)
+```
+
+依次用 setString(1, studentId)、setString(2, name)、setInt(3, age) 设置值。DAO 的 int age 接收到的是已经过 Service 非空校验的年龄。
+
+| 方法 | 当前用途 | 返回值 |
 |---|---|---|
-| 身份数据与名单匹配 | 同一种类型的不同对象；构造方法实参；布尔角色；对象引用传递 | 理解讨论，不计为独立编码 |
-| 权限对象和局部分支 | 身份与权限分开；枚举范围；Set、isEmpty、contains；return 结束方法 | 没有公开或重写完整权限业务 |
-| Controller 调 Service | 拆开嵌套调用；形参与实参；返回对象引用；各层职责 | 具体响应对象生成尚未深入 |
-| Lombok 与构造方法注入 | 编译时生成构造方法；运行时由 Spring 注入依赖 | 对照以前显式构造方法练习，未新增注入实验 |
-| Service 调 Repository | Service 内部调用数据访问层，返回 List；业务功能之间通过服务协作 | 本次只追踪成员查询 |
-| JPA 与 JDBC 对照 | 实体表映射、主键、JpaRepository 泛型、内置查询与结果映射 | JPA 首轮理解，未独立实操 |
-| AI Coding 提示词 | 目标、来源、规则、异常、范围和验收 | 后续每个小业务加入 Prompt 训练 |
+| executeQuery | SELECT 查询 | ResultSet |
+| executeUpdate | INSERT 等更新操作 | 影响行数 int |
 
-#### 二、今天真正追问清楚的问题
+本条单行插入正常应影响 1 行，失败可能抛出 SQLException，不是保证返回 0。Service 对异常继续传播，对非预期行数也不报成功。当前练习采用普通 JDBC 连接默认自动提交；未扩展多步写事务，不能将这里的结果检查当成完整事务控制。
 
-- **不同身份靠继承区分吗？** 这个片段用身份对象的不同属性值表示角色；名单匹配决定值。继承适合稳定的类型与行为差异；属性方便表示重叠角色。
-- **权限是特殊语法吗？** 它是 Java 对象，保存身份、范围类别和可见人员集合。判断方法只给结果，业务代码需要落实筛选或拒绝。
-- **负责科室怎么判断？** 通过负责科室集合是否为空理解条件分支，再联系“查询对应成员集合”的概念；实际机构关系和完整查询规则不公开。
-- **变量赋值就是创建对象吗？** 方法返回引用赋给变量，不等于赋值语句自己 new 对象；引用传递也不是复制对象。是否涉及多态，要结合声明类型、实际对象和调用分析。
-- **Service 从哪里来？** 字段由开发者声明，构造方法接收引用；Lombok 可以生成构造方法，Spring 才负责依赖提供与注入。不是类名带 Service 就自动有业务能力。
-- **DAO 在哪里？** 看板服务通过组织服务读取成员，组织服务调用 Repository。Repository 在本例承担数据访问职责，数据库本身不是 Java 三层之一。
-- **SQL 去哪里了？** 手写 JDBC 中的 SQL、绑定、执行和结果封装，常见查询由框架负责；底层仍使用 JDBC。
-- **框架怎么理解查询意图？** findAll/findById 是已有操作，结合实体映射与传入值执行；不是猜测自然语言。不能因此认为任意复杂条件都不必描述或编写查询。
-- **findAll 会排序吗？** 无参查询不保证顺序；自己的旧 DAO SQL 显式 ORDER BY 与它存在差别。
+“先查再插”不能杜绝并发重复：两个请求可能都先查到不存在。数据库主键/唯一约束仍需保留，Controller 对 MySQL 1062 作重复提示。这是已有处理代码，不等于并发场景已测试。
 
-<a id="flow-2026-11-05"></a>
+#### 五、接口、模拟实现和 Controller 怎样接通？
 
-#### 三、本日走到的调用链
+StudentQueryService 声明 findAll、findById 和 create。普通非抽象实现类必须提供或继承接口抽象方法的实现，即使没有启用 @Service，也受 Java 编译规则约束。
+
+MockStudentService 对查询提供模拟结果，create 抛 UnsupportedOperationException，明确“暂不支持新增”，不返回假的保存成功。目前注册的仍是数据库 StudentService。
+
+Controller create 调用 Service，返回 Result(true,"新增成功",rows)；捕获 IllegalArgumentException 返回输入或重复提示；SQLException 的错误码为 1062 时返回唯一字段重复提示，其他 SQL 异常继续抛出。
+
+当前没有统一异常处理：部分校验失败、重复失败仍正常返回 HTTP 200，业务是否成功要看 success/message；其他未处理异常默认通常为 500。自定义异常、统一错误响应、201/400/409 状态码仅讨论和预告，尚未编写。
+
+接口也允许提供 default、static 方法；private 方法仅提及。当前查询/新增能力用抽象方法，具体实现由类提供。@Override 是检查标记，不是没有它就一定不算实现。
+
+<a id="flow-2026-11-06"></a>
+
+#### 六、新增学生的数据流
 
 ```mermaid
 flowchart TD
-    A["请求入口：已复习"] --> B["查询身份、取得权限：已讨论"]
-    B --> C["调用看板 Service：已阅读开头"]
-    C --> D["组织 Service 查询成员：已追踪"]
-    D --> E["Repository / JPA / Hibernate：首轮理解"]
-    E --> F["JDBC 与数据库"]
-    F --> G["返回成员列表：当前停点"]
-    G -. "尚未拆解" .-> H["整理成员、读取打卡与请假"]
-    H -.-> I["结合排班计算、权限筛选、生成响应"]
+    A["Postman：POST /students + JSON"] --> B["Spring MVC 匹配请求方法"]
+    B --> C["RequestBody 转为 StudentCreateRequest"]
+    C --> D["Controller 调用 Service.create"]
+    D --> E["校验学号、姓名和年龄"]
+    E -->|"合法"| F["建立 JDBC Connection"]
+    F --> G["DAO.findById 检查重复"]
+    G -->|"不存在"| H["DAO.insert 绑定三个参数"]
+    H --> I["executeUpdate"]
+    I --> J[("MySQL 保存")]
+    J --> K["返回影响行数"]
+    K --> L["Service 确认 rows 为 1"]
+    L --> M["关闭连接，Controller 返回 Result"]
+    M --> N["JSON 响应"]
+    N --> O["GET 查询并在 Workbench 核验"]
+    E -->|"非法"| P["IllegalArgumentException → 业务提示"]
+    G -->|"已存在"| P
+    I -->|"唯一键重复 1062"| Q["Controller 返回重复提示"]
+    I -->|"其他 SQLException"| R["向外抛出，不伪装未找到"]
 ```
 
-这个图只表达教学主线，不是原项目完整架构或完整实现。前端页面、计算算法、外部系统对接、定时任务、导出和部署仅了解用途，没有逐项学习源码。
+#### 七、排错：服务没有启动、代码未生效与空请求体
 
-#### 四、结合已有练习重新确定基础
+| 观察 | 本次原因和处理 |
+|---|---|
+| ECONNREFUSED | 后端未启动；只读检查 8080 无监听，启动启动类后学习者反馈恢复 |
+| POST 返回 405 | 新方法未通过重启加载；重启后收到预期内容 |
+| POST 空请求体返回 400 | @RequestBody 默认要求请求体，框架在进入方法体前拒绝 |
 
-核对了 Java-Basics、Database-Basics、JavaWeb-Study 的最新记录及代表性源码。应区分独立简单练习、指导实践、概念讲解，不能把“出现过代码”当作长期掌握。
+选择 POST 不会自动生成 JSON。Postman 应选择 Body → raw → JSON 并填入内容。没有请求体与发送 {} 不同：前者缺少必需数据；后者通常可创建字段为 null 的对象，再由 Service 校验拒绝。
 
-- 方法、循环、数组等有简单独立练习证据；类、接口、多态、集合、IO 和异常已学习并做过多轮实践，细节继续巩固。
-- JDBC CRUD、DAO、事务提交回滚已有指导实践；复杂关联统计、独立综合 SQL 仍需练习。
-- HTTP 参数、JSON、三层架构、接口解耦、构造方法 DI 截至 11 月 4 日已有指导实践，不能再全部归为“没学过”。
-- Map、泛型、Lambda、Stream 已有练习；复杂流水线仍需逐步阅读。
-- JPA/Hibernate、框架事务及部分新语法、Vue、外部集成和工程运维仍需学习；不是今天已完成的内容。
-- 课程粗估约四到五成属于尚未系统学习的新内容，其余为已有基础和需迁移巩固的内容。这只是教学安排估计，不是能力测验得分，也不是代码覆盖率。
+修改源码不等于运行服务已经加载它。方法已添加、应用已启动、接口内容正确、数据库值正确，是不同验证层次。
 
-<a id="ai-coding-2026-11-05"></a>
+<a id="tests-2026-11-06"></a>
 
-#### 五、本日 Prompt 练习：描述身份识别小业务
+#### 八、测试证据与范围
 
-提示词应表达业务契约，不必预先替 AI 设计复杂框架。下面使用通用演示名单，不披露原机构的实际身份规则：
+以下主要是学习者亲自操作后反馈，不能说成助手独立执行了全部测试。使用 demo 前缀的虚构练习学号，不公开真实学生名单或实际业务数据。
 
-> 先阅读现有身份识别和客户端代码。目标是根据人员编号返回编号、姓名、是否为负责人、是否为管理员。角色名单来自已有服务，分别匹配，允许同时具备两种角色；复用现有数据类型和客户端，不写死真实名单。先检查空编号、查不到姓名、服务失败的已有处理；没有约定或有冲突时说明并询问，不自行编造规则。只修改身份识别相关代码，不改权限范围、登录、数据库结构，不添加依赖。若现有实现已满足要求就指出证据。先解释方案，待我理解后再编码。用虚构数据覆盖普通人员、单一角色、重叠角色及约定的异常分支；分别报告检查、构建、运行和未验证项。
+| 场景 | 已反馈验证范围 |
+|---|---|
+| 按学号查询 | 存在时返回学生；不存在提示未找到；查询全部仍正常 |
+| POST JSON 接收演示 | 学号、姓名、年龄正确接收并返回，当时尚未保存 |
+| 合法新增 | 返回新增成功，随后 GET 查询到对应学生 |
+| 重复学号 | 返回拒绝提示，原姓名未被覆盖；未据此扩大到所有字段完全比对 |
+| 年龄 151 | 拒绝且随后未找到对应记录 |
+| 缺失年龄 | 拒绝且随后未找到对应记录 |
+| 年龄 0 | POST、GET 成功，并在 Workbench 确认保存值为 0 |
+| 年龄 150 | POST、GET 成功，并在 Workbench 确认保存值为 150 |
+| 年龄 -1、空白学号、空白姓名 | 三项提示符合预期，数据库检查无对应新增记录 |
+| 空请求体 | 观察到 400；补充完整 JSON 后正常处理 |
 
-发布学习材料前还要明确允许公开的文件与片段、来源归属、脱敏范围，避免 AI 将完整业务工程当作个人练习上传。
+工具在学习过程中实际检查过源码与运行证据：接口及两个实现补齐 create；相关 Service 最后修改时间 20:25:31，8080 对应 Java 进程启动于 20:25:36，随后对不存在学号的只读查询得到 HTTP 200、success=false、message=未找到学生、data=null。这支持当时服务启动晚于修改且该查询正常，不代表独立测试了新增。
 
-#### 六、掌握程度、归档验证与下次起点
+上传阶段只核对源文件和远端，不再重复执行数据库写入。本次不宣称 Maven 全构建、生成的 contextLoads 测试或全部接口验收通过。并发重复、超长输入、数据库故障、全部非法 JSON 形态等仍未覆盖。
 
-- 本日是读代码与问答，没有独立实现身份服务、权限服务或 Repository，也没有对考勤应用进行构建、测试、数据库操作或部署。
-- 只检查本次新增文档和短片段的对应关系、脱敏、代码围栏与链接；节选依赖有意省略，不是可直接运行工程，不宣称编译通过。
-- 原项目文件未修改，已有学生查询工程也未修改。未公开原项目源码包、配置、内部路径、域名、标识或真实记录。
-- 自动生成 SQL、框架对象创建等属于首轮机制理解；能跟随解释不等于独立设计、排错和长期掌握。
-- 主线下次从“成员列表怎样整理成考勤计算输入”继续；需要时先补 Repository 查询机制。原学生查询练习按编号真正查库仍待完成，没有被本次阅读自动完成。
-- 按用户要求，后续小业务均加入“怎样写 Prompt，以及怎样验收 AI 实现”，每次只讲一小段。
+<a id="ai-coding-2026-11-06"></a>
+
+#### 九、怎样指挥 AI，怎样报告“成功”？
+
+先说清需求、约束和验收场景，再让 AI 复用现有结构做最小改动。示例：
+
+> 沿用当前 Controller、Service、静态 JDBC DAO，实现 POST 新增学生。学号、姓名、年龄必填，年龄允许 0～150，重复学号拒绝且不覆盖原记录。使用参数化 SQL，核对影响行数，保留唯一约束。先检查已有代码，不调整无关结构。分别报告源码检查、实际运行、用户反馈和未验证项；需要确认接口已加载新代码。写库测试只使用虚构数据，并说明会产生的记录。
+
+不要把“HTTP 200”“响应 success=true”“重新查询到记录”“数据库字段核对正确”混成一个结论。年龄 0 测试时，学习者只说“成功”，助手进一步确认是否也包含 Workbench 核对；确认后才记录完整范围。
+
+双方约定：上下文足以确定范围时明确复述；仍有歧义就询问，不自行扩大。助手的源码检查、用户执行反馈、工具独立实测分别说明。
+
+#### 十、当前停点与实际开发意义
+
+- 已完成基础查询、新增、校验与反馈测试闭环；三层架构是既有基础，本轮重点是新输入、业务规则、SQL 和验收。
+- StudentQueryService 名称仍沿用旧查询阶段，现已包含 create；暂不借归档重命名或重构。
+- 当前查询 Student 只包含学号、姓名，核验年龄需要直接查询数据库；查询成功不能单独证明年龄写入正确。
+- 错误响应整理尚未开始，下一次可从自定义业务异常和 HTTP 状态继续。
+- 能够说明数据在哪校验、何时入库、为何拒绝、怎样证实，是实际开发和 AI Coding 的基础；当前成果不等于独立掌握生产部署或全部可靠性处理。
 
 
 ## 记录约定

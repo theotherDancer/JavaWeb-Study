@@ -33,4 +33,42 @@ public class StudentDao {
 
         return students;
     }
+    public static Student findById(
+            Connection connection, String studentId) throws SQLException {
+
+        String sql =
+                "SELECT student_id, name FROM student WHERE student_id = ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, studentId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    String id = resultSet.getString("student_id");
+                    String name = resultSet.getString("name");
+
+                    return new Student(id, name);
+                }
+
+                return null;
+            }
+        }
+    }
+    public static int insert(
+            Connection connection,
+            String studentId,
+            String name,
+            int age) throws SQLException {
+
+        String sql =
+                "INSERT INTO student (student_id, name, age) VALUES (?, ?, ?)";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, studentId);
+            statement.setString(2, name);
+            statement.setInt(3, age);
+
+            return statement.executeUpdate();
+        }
+    }
 }
