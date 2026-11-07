@@ -1,11 +1,11 @@
 # JavaWeb 学习记录
 
-从“浏览器怎样调用我写的 Java 方法”出发，整理 AI 全栈成长营 Level 2「JavaWeb 核心技术」的学习过程。这里既保存进度，也把学习中真正困惑过的问题讲清楚，供以后回看。
+从“浏览器怎样调用我写的 Java 方法”出发，以 AI 全栈成长营 Level 2 的 Web 基础为主线，并提前实践部分 Level 3 的 Spring、Spring MVC、Spring Boot 与 MyBatis。这里既保存进度，也把学习中真正困惑过的问题讲清楚，供以后回看；不代表已顺序完成所有前置章节。
 
 不要求一开始记住所有框架名字。先抓住主线：**Maven 准备项目依赖，Spring Boot 帮助启动应用，Tomcat 接收请求，Spring MVC 安排调用我们写的方法。**
 
 > 仓库记录起始：2026-10-28（Maven 历史记录）；JavaWeb 正式记录起始：2026-10-29。
-> 最近更新：2026-11-06。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
+> 最近更新：2026-11-07。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
 
 > 示例说明：本文中的人名、学号均已改为示例化表述，仅用于解释代码与请求格式，不保证与本机数据库记录对应。运行验收只记录条数、字段及行为，不公开数据库名单原值。
 
@@ -19,13 +19,14 @@
 | 2026-11-03 | 嵌套对象、数组/List、日期/JSON/路径参数、响应包装、JDBC 接口整合 | [当天总结](#day-2026-11-03) · [接口清单](#endpoints-2026-11-03) · [完整流程图](#flow-2026-11-03) |
 | 2026-11-04 | 三层架构、接口解耦、IOC/DI、真实/模拟查询切换与验证 | [当天问答总结](#day-2026-11-04) · [分层与注入流程图](#flow-2026-11-04) · [AI Coding 与验收](#ai-coding-2026-11-04) |
 | 2026-11-06 | 按学号查询、POST 新增、业务校验、重复处理与边界验收 | [当天总结](#day-2026-11-06) · [新增流程图](#flow-2026-11-06) · [测试范围](#tests-2026-11-06) · [AI Coding](#ai-coding-2026-11-06) |
+| 2026-11-07 | JDBC 迁移 MyBatis、Mapper 与连接池、学习定位与 AI Coding 复盘 | [当天问答](#day-2026-11-07) · [连接池](#pool-2026-11-07) · [测试范围](#tests-2026-11-07) · [课程定位](#location-2026-11-07) · [AI Coding](#ai-coding-2026-11-07) |
 
 
 10 月 28 日的 Maven 内容原先归档在 Database-Basics，已于 10 月 29 日复制到本仓库，保留原始来源和日期。今后 JavaWeb 及其 Maven 前置学习统一在这里接续记录；数据库仓库中的历史内容保留。
 
 ### 如何查看和运行代码
 
-- [SpringBoot_javaWeb_quickstart](SpringBoot_javaWeb_quickstart)：当前本机工程快照，最近同步日期 2026-11-06，包含 POM、启动类、Controller、资源配置、生成的测试类和 Maven Wrapper 文件。
+- [SpringBoot_javaWeb_quickstart](SpringBoot_javaWeb_quickstart)：当前本机工程快照，最近同步日期 2026-11-07，包含 POM、启动类、Controller、资源配置、生成的测试类和 Maven Wrapper 文件。
 - IDEA 打开该子目录的 pom.xml 加载工程；运行 SpringBootJavaWebQuickstartApplication 启动类，再访问 http://localhost:8080/hello。
 - 当前 POM 为 Spring Boot 4.1.2、目标 Java 17，使用 spring-boot-starter-webmvc；本机学习时选用 JDK 25。可继续使用 IDEA 配置的 Maven。Wrapper 自身配置了发行版，不等于此前 IDEA 的内置 Maven 版本。
 - [HelloController.java](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/Controller/HelloController.java) 当前返回 `Hello world!喵`。下文 `Hello world!` 是讲解时的示例，二者不矛盾。
@@ -33,7 +34,8 @@
 - 生成的 contextLoads 测试随工程保存，本次未运行该测试。/greet、/introduce、/user-info 已保存到源码，学习者反馈相应 Postman/浏览器测试成功。/introduce 当前生效的是可选年龄版本，必填与默认 18 的旧版本保留为注释。
 - 真实学生查询：确保本机 MySQL 的 campus_learning.student 已存在（查询需要 student_id、name 列；新增还需要 age 列，student_id 应有主键或唯一约束），在 Spring Boot 启动类运行配置中设置 DB_PASSWORD，再请求 GET /students。账号 root、localhost:3306 为本次学习环境，不应直接照搬到其他环境；不提交密码、运行配置或数据库物理文件。
 - 新增请求类：[StudentCreateRequest](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/pojo/StudentCreateRequest.java)。当前 POST /students 会真正写入练习数据库；请只使用虚构数据，重复发送同一学号应被拒绝。
-- 当前 GET /students 采用 Controller → Service → 静态 DAO → MySQL；StudentService 启用 @Service，MockStudentService 的 @Service 已注释。切换实现后需重新构建/启动并检查响应内容，不只看 200。
+- 当前 GET /students、GET /students/{studentId}、POST /students 采用 Controller → Service → Mapper/MyBatis → JDBC → MySQL。StudentService 启用 @Service，MockStudentService 的 @Service 已注释。旧 JDBC 方法保留为注释，StudentDao 保留对照；切换实现后需重新构建/启动并核对响应内容。
+- MyBatis 入口：[StudentMapper](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/mapper/StudentMapper.java)。数据库连接配置见 application.properties，密码由 `${DB_PASSWORD}` 环境变量提供；实际观察到 HikariCP 启动。连接池参数未调整，未配置自动建表。
 - Service 代码：[查询接口](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/service/StudentQueryService.java) · [数据库实现](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/service/StudentService.java) · [模拟实现](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/service/MockStudentService.java)。
 - 新增对象/查询类：[Address](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/pojo/Address.java)、[Result](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/pojo/Result.java)、[Student](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/pojo/Student.java)、[StudentDao](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/dao/StudentDao.java)、[StudentController](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/Controller/StudentController.java)。
 - [MavenStudy](MavenStudy)：2026-10-28 从数据库仓库复制的历史快照，只有 pom.xml，包含 Logback 依赖；不要把它当作当前本机 MavenStudy 的完整镜像。
@@ -42,19 +44,19 @@
 
 ## 当前进度
 
-- 最近编码与学习：2026-11-06，复习按学号查询，并完成 POST 新增学生的基础闭环；源码已归档，测试证据见 [本日测试表](#tests-2026-11-06)。
-- 自有练习当前能力：GET /students 查询全部、GET /students/{studentId} 查询数据库中指定学生、POST /students 接收 JSON 并校验后新增。
-- 旧路径参数回显练习改为 GET /student-id-echo/{studentId}，避免与真实查询映射冲突。
-- 结构延续：Controller 处理请求和响应；Service 校验、查重、建立本例 JDBC 连接；静态 DAO 执行参数化 SQL。通过接口与构造方法注入使用 Service。
-- 新增规则：学号、姓名、年龄必填；学号和姓名不能只有空白；年龄 0～150；重复学号不得覆盖原记录。唯一约束保留，Controller 对 MySQL 1062 作重复提示。
-- 当前启用数据库 StudentService；模拟实现支持查询，create 明确抛出不支持异常，不假报保存成功。
-- 已由学习者验证：正常新增与查询、重复拒绝及原姓名未覆盖、年龄缺失和 -1/151 拒绝、0/150 合法且 Workbench 核对年龄、空白学号/姓名拒绝且未新增。详见本日章节，不扩大为全场景验证。
-- 工具已检查本日源码、进程与只读查询；上传阶段不重复发送写请求，不宣称独立复测全部业务或 Maven 全构建通过。
-- 边界：并发重复、超长输入、数据库故障、正式环境部署等未验收；数据库结构仍由练习环境提供，不因提交源码自动创建。
-- 自定义异常、统一错误响应及 201/400/409 等状态码改造仅预告，用户要求先暂停，尚未实施；目前部分业务失败仍返回 HTTP 200，需看 Result。
-- 后续继续：整理错误响应，然后按实际小功能补充知识和测试；AI Coding 侧重需求、最小修改、运行生效证据与验收。
-- 会话、上传下载、前端页面联调等仍待正式学习。保密材料、内部项目与网络配置不在本次公开归档范围。
-- 历史章节中的“当前/尚未”按各自日期理解，最新状态以本节与 11 月 6 日章节为准。
+- 最近编码与学习：2026-11-07，将学生按学号查询、查询全部、新增从手写 JDBC 迁移到 MyBatis；参见[本日问答](#day-2026-11-07)和[测试证据](#tests-2026-11-07)。
+- 当前结构：Controller 接收请求、组织响应；Service 校验、查重、安排业务步骤；构造方法注入的 StudentMapper 代理执行 SQL、绑定参数、映射结果。连接经 DataSource 和连接池管理，MyBatis 底层仍使用 JDBC。
+- Mapper 使用 @Select、@Insert、@Param 与显式构造映射；Student 仍使用双参数构造方法，查询返回学号与姓名，不显示年龄。
+- 保留旧 JDBC 实现的块注释及 StudentDao，作为人工复查、对比学习材料；不清理、不额外重构，旧方法不在生效调用链中。
+- 新增规则不变：学号、姓名、年龄必填；学号和姓名不能只有空白；年龄 0～150；重复学号不得覆盖。数据库唯一约束仍生效，Controller 增加 Spring DuplicateKeyException 兜底。
+- 本日由学习者验证：有/无匹配学号、完整列表、正常新增后查询、重复拒绝且原姓名未覆盖、年龄 151 拒绝且未新增。先前版本的其他边界测试保留在历史记录，不自动算作本次迁移后的逐项复测。
+- 工具已检查实际源码与 POM；用户截图确认依赖树命令成功及 HikariCP 建立连接。归档时隔离副本的离线 Maven compile 因父 POM 缓存来源标识不匹配，在依赖解析阶段失败，未进入编译；不宣称独立构建或全量测试通过。
+- 未验收范围：数据库重复键异常分支、并发、其他输入边界、故障、性能；本日不重发写请求，不启动 contextLoads。
+- 连接池：已理解复用、借还、限制、等待超时及 DataSource/Connection/Mapper 的区别；实际依赖 HikariCP 7.0.2，未调参。不是连接数越大越好。
+- Lombok 只介绍用途，未添加依赖或改写实体；统一异常处理、自定义业务异常、HTTP 状态码体系、Spring 事务等尚未正式实施，部分业务失败仍返回 HTTP 200。
+- 学习定位：Level 1 的 Java/MySQL/JDBC 已有指导练习；Level 2 Web 基础为主线，提前进入部分 Level 3 框架入门。前端、会话、上传下载、完整综合项目及部分基础缺口仍待补齐，不能称整级学完。
+- 后续按实际掌握情况安排 Lombok、MyBatis 修改/删除、参数安全与条件查询，再补 XML、动态 SQL、错误处理、事务与测试。网课参考，全目录查漏，实际项目验收，每天复盘纠偏。
+- 本日公开归档仅包含自有学习代码和通用总结，不上传保密材料、内部项目、密码或网络配置；不代表历史文件和历史提交已经全面审计。历史章节按各自日期理解，最新状态以本节与 11 月 7 日章节为准。
 
 ## 学习路线
 
@@ -64,12 +66,13 @@
 | Web 应用概览 | HTTP、Tomcat、创建与访问应用 | 已完成首轮入门，持续巩固 |
 | Servlet 核心技术 | 概述、生命周期、配置、请求响应、乱码、ServletContext | 已理解调用关系和生命周期；当前借助 Spring MVC 实践请求参数，其余未完成 |
 | 分层与 Spring 基础 | Controller/Service/DAO、接口解耦、IOC、构造方法 DI | 2026-11-04 已完成首轮指导实践；多实现选择等待巩固 |
-| 学生查询与新增实践 | 路径参数、JSON、JDBC、校验、查重、边界测试 | 2026-11-06 已完成基础指导实践；错误响应待完善 |
+| 学生查询与新增实践 | 路径参数、JSON、校验、查重、边界测试 | 11 月 6 日 JDBC 实践，11 月 7 日迁移到 MyBatis；错误响应待完善 |
+| Level 3 部分框架入门 | MyBatis 注解、参数与结果映射、Boot 数据访问、HikariCP | 当前重点：三个操作已迁移并进行限定场景验证；不代表 Level 3 整体完成 |
 | 会话状态管理 | Cookie、Session、登录状态保持 | 待正式学习 |
 | 文件上传与下载 | 上传与下载实操 | 待学习 |
 | 前后端分离技术 | MVC、JSON、Axios、跨域 | 待学习 |
 
-目前借助 Spring Boot 搭建可运行的 Web 示例；这不代表已经完成原目录 Level 3 的 Spring Boot 系统学习。
+目前借助 Spring Boot 和 MyBatis 搭建可运行的 Web 示例，学习横跨 Level 2 Web 基础与部分 Level 3 框架；并未完成整级课程。参见[全层级定位](#location-2026-11-07)。
 
 ## 知识点索引
 
@@ -93,6 +96,10 @@
 - [11 月 6 日：按学号查询与新增学生问答](#day-2026-11-06)
 - [新增学生完整流程](#flow-2026-11-06) · [本日测试范围](#tests-2026-11-06)
 - [AI Coding：需求、数据与证据边界](#ai-coding-2026-11-06)
+- [11 月 7 日：MyBatis 与 JDBC、Mapper 分工](#day-2026-11-07)
+- [连接池、DataSource 与两种代理](#pool-2026-11-07)
+- [MyBatis 迁移测试证据与边界](#tests-2026-11-07)
+- [全栈课程分级定位](#location-2026-11-07) · [人工审查与每日复盘](#ai-coding-2026-11-07)
 - [每日学习记录](#每日学习记录)
 
 ## 工具和框架的关系
@@ -106,6 +113,9 @@
 | Spring MVC | Spring 中负责 Web 请求处理的框架 |
 | Spring Boot | 简化 Spring 应用配置和启动 |
 | Tomcat | 接收网络连接、解析 HTTP 请求、调用 Servlet、发送响应 |
+| MyBatis | 持久层框架，执行 SQL、绑定参数并映射结果，底层使用 JDBC |
+| DataSource | 获取数据库连接的统一接口 |
+| HikariCP | 本项目实际使用的连接池，管理连接借出、归还和复用 |
 
 Maven 可以用于没有 Spring Boot 的项目；Spring Boot 也可以使用其他构建工具。
 
@@ -1189,6 +1199,163 @@ flowchart TD
 - 错误响应整理尚未开始，下一次可从自定义业务异常和 HTTP 状态继续。
 - 能够说明数据在哪校验、何时入库、为何拒绝、怎样证实，是实际开发和 AI Coding 的基础；当前成果不等于独立掌握生产部署或全部可靠性处理。
 
+
+<a id="day-2026-11-07"></a>
+
+### 2026-11-07：从 JDBC 到 MyBatis，理解框架分工与连接池
+
+今天没有重新学习一套数据库，而是把已有的学生查询、新增功能从手写 JDBC 迁移到 MyBatis，并追问框架背后的连接管理。主要代码由学习者逐步填写，AI 提供示例、解释和源码检查；AI 另按要求添加 Mapper 注释、移动 Service 的字段和构造方法。属于指导练习，不记为独立完成整个功能。
+
+#### 一、MyBatis 是整个后端框架吗？和之前的 MySQL 有什么关系？
+
+MySQL 是保存、查询和修改数据的数据库；SQL 描述数据操作；JDBC 是 Java 访问数据库的标准 API。MyBatis 是持久层框架，主要简化 SQL 参数绑定、执行和结果映射，不替代 Controller、Service、MySQL 或业务判断。
+
+| 方式 | 我们编写什么 | 工具帮助处理什么 |
+|---|---|---|
+| 在 Workbench 执行 SQL | 查询条件、字段、增删改语句 | MySQL 执行 SQL |
+| 手写 JDBC DAO | SQL，以及 Connection、PreparedStatement、ResultSet 等操作 | JDBC 驱动与数据库通信 |
+| 使用 MyBatis Mapper | 方法声明、SQL、参数名和结果映射 | 绑定参数、执行 SQL、将结果映射成 Java 对象 |
+
+Database-Basics 中的 StudentDao 已经有查询、新增、修改年龄、删除方法。因此“还没实践修改和删除”只适用于当前 Web 项目的 MyBatis 实现，不代表以前从未用 JDBC 练习过。
+
+```mermaid
+flowchart TD
+    A[客户端 HTTP 请求] --> B[Controller：参数与响应]
+    B --> C[Service：校验、查重、业务步骤]
+    C --> D[Mapper 代理对象：SQL 与结果映射]
+    D --> E[JDBC]
+    E --> F[MySQL]
+    F --> E
+    E --> D
+    D --> C
+    C --> B
+    B --> G[JSON HTTP 响应]
+```
+
+#### 二、接口没有方法体，谁来执行？Controller 也是 MyBatis 创建的吗？
+
+不是。Spring 创建和管理被扫描到的 Controller、Service；MyBatis 为 Mapper 接口提供代理对象，通过集成机制注册到 Spring，再注入 Service。
+
+StudentMapper 是接口，studentMapper 是引用变量，引用所指向的对象才实际执行方法。接口声明能力，代理对象实现执行过程，仍然涉及接口与多态。Mapper 对象可以复用，不需要永久绑定同一个数据库连接；复用对象也不等于复用查询结果。
+
+HelloController 是请求参数等基础练习入口；StudentController 处理学生业务。路由由请求路径和 HTTP 方法对应的映射决定，不是由类名决定。本次新增异常处理修改的是 StudentController.create()。
+
+#### 三、今天具体接入了什么？
+
+| 文件 | 本日变化 |
+|---|---|
+| pom.xml | 添加 mybatis-spring-boot-starter 4.0.0；当前 Boot 为 4.1.2，Java 目标为 17 |
+| application.properties | 配置本机练习数据库地址、用户名，密码使用环境变量占位符 `${DB_PASSWORD}` |
+| StudentMapper.java | 新建接口；添加按学号查询、查询全部、新增；加入关键职责和映射注释 |
+| StudentService.java | 构造方法注入 Mapper；三个生效的方法改为调用 Mapper；原业务校验保留 |
+| StudentController.java | 新增时的数据库重复键分支改为捕获 Spring DuplicateKeyException |
+
+学习者要求保留旧 JDBC 实现用于对比，因此旧方法保留在块注释中，StudentDao.java 仍保留；没有借归档清理旧代码、修改数据库结构或重构其他功能。Service 的 Mapper 字段和构造方法已移到类开头。
+
+**参数怎样进入 SQL？** `@Param("studentId")` 为参数命名，`#{studentId}` 引用该参数值，底层通过 JDBC 参数绑定传入，不直接把用户输入拼接成 SQL。Java 形参名可以不同，但命名映射必须对应。
+
+**查询结果怎样变成 Student？** 本例 Student 只有 `Student(String studentId, String name)`，用 `@ConstructorArgs` 和两项 `@Arg` 显式指定结果列到构造方法参数的映射。按主键查询返回 Student，无匹配返回 null；findAll 返回 List，每条结果映射成一个 Student，无记录时返回空列表。
+
+**新增返回什么？** `@Insert` 方法返回影响行数 int，成功新增一条时返回 1；不需要构造 Student 查询结果，所以没有添加构造映射。Service 保留“校验 → 查重 → 保存 → 核对行数”。行数核对本身不提供事务回滚，尚未加入 Spring 事务管理。
+
+**为什么改异常类型？** MyBatis 与 Spring 集成会把数据库访问异常转换成 Spring 数据访问异常。原来 JDBC 按 SQLException 错误码 1062 判断的分支，不再照搬；本例捕获 `org.springframework.dao.DuplicateKeyException`，不是 YAML 的同名异常。其他数据库错误不能全部冒充“重复”。
+
+提前查重可提供清楚提示，但两个并发请求可能同时查到不存在，随后发生数据库唯一约束冲突，因此保留数据库异常兜底；普通重复提交命中提前查重，不能证明兜底分支也被测试。
+
+<a id="pool-2026-11-07"></a>
+
+#### 四、为什么不把一个 Connection 一直开着？
+
+单线程控制台程序可以复用一个连接；Web 程序需要处理并发、连接失效、事务状态和资源数量。连接池把复用集中管理：按需创建和维护连接，借出、归还、限制数量，并处理失效连接。它支持并发，但不是仅高并发才有用，也不能解决所有 SQL 慢、锁竞争或业务并发问题。
+
+| 名称 | 角色 |
+|---|---|
+| DataSource | 获取数据库连接的统一接口；接口本身不等于连接池 |
+| 连接池 | 管理底层连接的数量、复用、借出、归还及生命周期 |
+| Connection 引用 | 通常指向连接池返回的代理/包装对象，通过它使用底层连接 |
+| Mapper 代理对象 | 根据接口方法执行数据访问，可多次使用，不永久绑定一个连接 |
+
+```mermaid
+flowchart TD
+    A[Mapper 调用需要数据库连接] --> B[框架通过 DataSource 获取连接]
+    B --> C[连接池安排底层连接并返回 Connection 代理]
+    C --> D[通过 JDBC 执行 SQL]
+    D --> E[读取结果并映射对象]
+    E --> F[按资源管理规则释放连接]
+    F --> G[底层连接归还池中，供后续借用]
+```
+
+不是先拿到 Connection 代理再让它申请连接，而是向数据源申请后获得代理。一次借用通常对应一个底层连接；归还后，底层连接可能再分配给新的代理。调用代理 close() 通常是结束本次借用，不是直接断开底层连接；已关闭的代理不能继续使用。
+
+连接池的最大连接数主要限制底层连接数量，不是 Java 引用变量或包装对象总数。借不到连接时可以等待，超过获取连接等待时限会报错；这和已取得连接后的 SQL 执行超时不同。连接不是越多越好，需要结合数据库承载能力判断，当前未调整池参数。
+
+普通 Mapper 调用的资源由框架管理；加入 Spring 事务后，多次操作通常使用事务绑定的连接，到事务结束再释放，不能理解为每条 SQL 后都立刻归还。当前本例尚未配置这种多操作事务。
+
+**本日实际观察：** Maven dependency:tree 输出为 MyBatis Starter 4.0.0 → JDBC Starter 4.1.2 → HikariCP 7.0.2；BUILD SUCCESS 只证明该命令成功。随后启动类控制台出现 HikariPool 的 Starting、Added connection、Start completed，确认当次运行确实启动连接池并建立数据库连接。这不单独证明学生数据正确，也不是连接池性能测试。
+
+搜索日志时曾把关键词输入控制台输入区；需要先点击日志内容，再用 Ctrl+F 打开查找框。Maven Run 面板太矮时，先展开输出区域，不要仅凭“回车没反应”判断命令未执行。
+
+<a id="tests-2026-11-07"></a>
+
+#### 五、测试范围：不能把 200 或“成功”扩大成全场景通过
+
+以下业务用例由学习者执行并反馈成功，AI 没有在归档时重新发送写请求：
+
+| 用例 | 学习者反馈的实际结果 | 本项证明什么 |
+|---|---|---|
+| 存在的学号查询 | 返回对应学生 | 本次有匹配记录的查询符合预期 |
+| 不存在的学号查询 | 未找到学生，data 为 null | 本次无匹配分支符合预期 |
+| 查询全部 | 不只看到 200，列表及学号、姓名符合预期 | 本次列表内容符合预期 |
+| 虚构学生正常新增，再按学号查询 | 新增返回 data: 1，随后查到对应学号和姓名 | 写入与后续查询链路接通 |
+| 同学号改姓名后再次新增，再查询 | Service 提示学号已存在，查询仍为原姓名 | 提前查重生效，原姓名未被覆盖 |
+| 新学号配年龄 151，再查询 | 年龄校验拒绝，未查到对应记录 | 该非法年龄用例没有新增记录 |
+
+当前查询只返回学号与姓名，不能单凭它证明年龄保持不变。数据库 DuplicateKeyException 分支、并发、其他输入边界、数据库故障尚未全面验证；以前 JDBC/旧版本的边界验证不能自动算作本次迁移后的逐项复测。
+
+HTTP 200 说明服务器报告正常处理请求，不保证业务内容正确。还要核对 Result.success、message、data；空列表可能是正确结果，也可能连接错库，取决于事先明确的预期。修改后不重启还可能验证到旧实现。
+
+归档检查：AI 已读取本日源码、核对 Mapper 与 Service/Controller 的关系，并解析 POM XML；用户截图提供依赖树与 HikariCP 启动日志证据。归档时另在隔离源码副本尝试离线 Maven compile，父 POM 缓存的仓库来源标识与该执行上下文不一致，解析阶段失败，未进入源码编译；不能称为本次 Maven 构建通过。未修改本机 Maven 设置或依赖缓存来绕过此问题，未运行 contextLoads，也未重新执行数据库写操作。
+
+<a id="location-2026-11-07"></a>
+
+#### 六、对应全栈成长营：不是所有 Level 2 已完成
+
+重新对照原始全层级目录后，定位需要纠正：以 Level 2 Web 基础为主线，已经提前实践部分 Level 3 框架，不是顺序完成 Level 1、2 后才进入 Level 3。
+
+```mermaid
+flowchart TD
+    A[AI 全栈成长营] --> B[Level 1：Java 与 MySQL/JDBC 已有练习基础]
+    A --> C[Level 2：Maven、HTTP、Web 基础已学习部分]
+    A --> D[Level 3：提前进入部分框架入门]
+    C --> C1[会话、上传下载、前端联调仍待补齐]
+    C --> C2[JavaScript、TypeScript、Vue 尚未系统学习]
+    D --> D1[Spring IOC/DI、SpringMVC 请求响应已有实践]
+    D --> D2[当前：MyBatis 入门与 Boot 数据访问]
+    D2 --> D3[今日：查询、新增迁移与 HikariCP 连接池]
+    D --> D4[事务、统一异常、测试等后续补齐]
+```
+
+原目录将 MyBatis 放在 Level 3 的 SSM 框架部分，Lombok 放在 Boot Web 开发中；数据库访问安排了 Druid。本机实际使用 HikariCP，不为了逐字跟目录立即换池。已接触代理概念不代表完成高级设计模式或框架源码学习，使用 AI 工具也不代表完成 Agent 开发专项。
+
+HTML/CSS、多线程、反射等仍有缺口，Git 独立操作需巩固；课程内指定综合项目未按原方案完成。没有可靠的全课程百分比，不能用进入某级的一小部分来代表整级能力。
+
+<a id="ai-coding-2026-11-07"></a>
+
+#### 七、AI Coding：代码要能被人工读懂，方向也要每天复盘
+
+- 新知识先讲解决的问题、现有方案的限制、现在是否必要以及替代方案，不为赶目录堆概念。
+- 除特别简单的代码，生成或修改时添加关键职责、参数/结果、边界和设计原因注释；同步维护注释，避免仅逐行翻译语法。
+- 人工审查 AI 代码是交付的一部分：说明改了哪里、为什么改、怎样验证及未验证范围。注释不能代替测试，源码正确也不能证明新进程已运行。
+- 遇到歧义、不合理或可能损失数据、泄露资料、影响其他功能的指令，先指出具体问题，必要时询问；明确、低风险操作不反复确认。
+- 每天复盘目标是否服务实际开发、掌握程度、测试证据和次日调整，同时反思 AI 教学有无重复、跳步或过深。
+
+提示词练习示例：“在现有 Controller → Service → Mapper 分层中迁移一个数据库操作，保留原业务校验和旧 JDBC 对照注释，不修改表结构。先说明修改范围，关键代码添加解释性注释，列出正常与关键失败场景，分别报告源码检查、运行证据和测试结论。”
+
+#### 八、学习停点与后续
+
+今天完成 MyBatis 三个操作的首轮迁移和连接池基础；Lombok 仅介绍用途，未添加依赖或改写实体。后续从 Lombok 小范围示例继续，再补当前 Web 项目的修改、删除、参数安全与条件查询，逐步进入 XML、动态 SQL、异常处理和事务。结合掌握情况调整，不重新把 JDBC 增删改查当作零基础，也不要求默写全部样板代码。
+
+公开归档仅包含自有虚构学生练习与通用学习总结，不包含学校培训 PPT、内部项目源码、账号密码、运行配置、网络配置或数据库原始记录。本次未全面审计或清理仓库历史文件与历史提交，不能据此宣称历史内容已全部完成保密检查。
 
 ## 记录约定
 

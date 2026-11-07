@@ -4,6 +4,7 @@ import com.zhangyihang.springboot_javaweb_quickstart.pojo.Result;
 import com.zhangyihang.springboot_javaweb_quickstart.pojo.Student;
 import com.zhangyihang.springboot_javaweb_quickstart.pojo.StudentCreateRequest;
 import com.zhangyihang.springboot_javaweb_quickstart.service.StudentQueryService;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
@@ -48,13 +49,19 @@ public class StudentController {
         } catch (IllegalArgumentException e) {
             return new Result(false, e.getMessage(), null);
 
-        } catch (SQLException e) {
+       /* } catch (SQLException e) {
             // MySQL 1062：主键或唯一键重复
             if (e.getErrorCode() == 1062) {
                 return new Result(false, "学号或其他唯一字段重复", null);
             }
 
             throw e;
+        }*/
+
+        } catch (DuplicateKeyException e) {
+            // 数据库拒绝重复的主键或唯一字段时，返回明确提示。
+            // 其他类型的数据库错误不在这里冒充“重复”处理。
+            return new Result(false, "学号或其他唯一字段重复", null);
         }
     }
 
