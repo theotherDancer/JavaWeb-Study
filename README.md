@@ -5,7 +5,7 @@
 不要求一开始记住所有框架名字。先抓住主线：**Maven 准备项目依赖，Spring Boot 帮助启动应用，Tomcat 接收请求，Spring MVC 安排调用我们写的方法。**
 
 > 仓库记录起始：2026-10-28（Maven 历史记录）；JavaWeb 正式记录起始：2026-10-29。
-> 最近更新：2026-11-07。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
+> 最近更新：2026-11-09。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
 
 > 示例说明：本文中的人名、学号均已改为示例化表述，仅用于解释代码与请求格式，不保证与本机数据库记录对应。运行验收只记录条数、字段及行为，不公开数据库名单原值。
 
@@ -20,6 +20,7 @@
 | 2026-11-04 | 三层架构、接口解耦、IOC/DI、真实/模拟查询切换与验证 | [当天问答总结](#day-2026-11-04) · [分层与注入流程图](#flow-2026-11-04) · [AI Coding 与验收](#ai-coding-2026-11-04) |
 | 2026-11-06 | 按学号查询、POST 新增、业务校验、重复处理与边界验收 | [当天总结](#day-2026-11-06) · [新增流程图](#flow-2026-11-06) · [测试范围](#tests-2026-11-06) · [AI Coding](#ai-coding-2026-11-06) |
 | 2026-11-07 | JDBC 迁移 MyBatis、Mapper 与连接池、学习定位与 AI Coding 复盘 | [当天问答](#day-2026-11-07) · [连接池](#pool-2026-11-07) · [测试范围](#tests-2026-11-07) · [课程定位](#location-2026-11-07) · [AI Coding](#ai-coding-2026-11-07) |
+| 2026-11-09 | IoC、DI、Mapper 参数绑定与结果映射、JSON 响应 | [当天问答与流程图](#day-2026-11-09) |
 
 
 10 月 28 日的 Maven 内容原先归档在 Database-Basics，已于 10 月 29 日复制到本仓库，保留原始来源和日期。今后 JavaWeb 及其 Maven 前置学习统一在这里接续记录；数据库仓库中的历史内容保留。
@@ -44,7 +45,8 @@
 
 ## 当前进度
 
-- 最近编码与学习：2026-11-07，将学生按学号查询、查询全部、新增从手写 JDBC 迁移到 MyBatis；参见[本日问答](#day-2026-11-07)和[测试证据](#tests-2026-11-07)。
+- 最近学习：2026-11-09，沿按学号查询串联 Spring 对象装配、Spring MVC 请求响应和 MyBatis 输入输出。参见[当天记录](#day-2026-11-09)。
+- 最近代码同步：2026-11-07，将学生按学号查询、查询全部、新增从手写 JDBC 迁移到 MyBatis；参见[本日问答](#day-2026-11-07)和[测试证据](#tests-2026-11-07)。
 - 当前结构：Controller 接收请求、组织响应；Service 校验、查重、安排业务步骤；构造方法注入的 StudentMapper 代理执行 SQL、绑定参数、映射结果。连接经 DataSource 和连接池管理，MyBatis 底层仍使用 JDBC。
 - Mapper 使用 @Select、@Insert、@Param 与显式构造映射；Student 仍使用双参数构造方法，查询返回学号与姓名，不显示年龄。
 - 保留旧 JDBC 实现的块注释及 StudentDao，作为人工复查、对比学习材料；不清理、不额外重构，旧方法不在生效调用链中。
@@ -75,6 +77,8 @@
 目前借助 Spring Boot 和 MyBatis 搭建可运行的 Web 示例，学习横跨 Level 2 Web 基础与部分 Level 3 框架；并未完成整级课程。参见[全层级定位](#location-2026-11-07)。
 
 ## 知识点索引
+
+- [IoC、DI 与 Bean，MyBatis 的输入输出和 JSON 响应](#day-2026-11-09)
 
 - [日期导航与代码目录](#日期导航与代码目录)
 - [2026-10-28 Maven 原始记录副本](notes/2026-10-28/maven.md)
@@ -1356,6 +1360,25 @@ HTML/CSS、多线程、反射等仍有缺口，Git 独立操作需巩固；课�
 今天完成 MyBatis 三个操作的首轮迁移和连接池基础；Lombok 仅介绍用途，未添加依赖或改写实体。后续从 Lombok 小范围示例继续，再补当前 Web 项目的修改、删除、参数安全与条件查询，逐步进入 XML、动态 SQL、异常处理和事务。结合掌握情况调整，不重新把 JDBC 增删改查当作零基础，也不要求默写全部样板代码。
 
 公开归档仅包含自有虚构学生练习与通用学习总结，不包含学校培训 PPT、内部项目源码、账号密码、运行配置、网络配置或数据库原始记录。本次未全面审计或清理仓库历史文件与历史提交，不能据此宣称历史内容已全部完成保密检查。
+
+<a id="day-2026-11-09"></a>
+### 2026-11-09 · 用一次按学号查询串起 SSM
+
+这次从网课的 IoC、DI 和 Bean 回到学生查询项目。它对应全栈路线里 Level 2 的 Web 请求响应，以及 Level 3 的 Spring 核心、Spring MVC 和 MyBatis 基础。
+
+**网课用 XML 注册 Bean，我的项目在哪里做同一件事？** 网课用 `<bean>` 声明由容器管理的对象，再用 `getBean()` 取出。项目里用 `@Service` 配合组件扫描注册 Service。MyBatis 与 Spring 的集成注册 Mapper 代理，Spring 通过构造方法把 Mapper 代理的引用交给 Service，再把 Service 的引用交给 Controller。把对象的创建与管理交给容器体现了 IoC，通过构造方法提供对象引用是 DI。
+
+```text
+应用启动：Spring 装配 Mapper → Service → Controller
+请求到来：Postman → Tomcat → DispatcherServlet → Controller → Service → Mapper → MySQL
+结果返回：查询结果行 → Student → Result → JSON → Postman
+```
+
+**同一个学号怎样一路传到数据库？** Spring MVC 根据 HTTP 方法和路径匹配 `@GetMapping`，再按 `@PathVariable` 从路径提取学号。Controller、Service 和 Mapper 之间用普通 Java 方法传参。到了 Mapper，MyBatis 读取 `@Param("studentId")`，把值绑定到 SQL 中的 `#{studentId}`，相当于以前在 JDBC 里写 `?` 再调用 `setString()`。
+
+**数据库的一行怎样变成 JSON？** MyBatis 根据 `@ConstructorArgs` 和 `@Arg` 取出结果列，通过构造方法创建 `Student`。Controller 把它放进 `Result.data`，Spring MVC 再通过消息转换器把 `Result` 写成 JSON 响应。查不到记录时，本次练习观察到 HTTP 仍返回 `200 OK`，业务结果是 `success: false`、`data: null`。客户端可以根据 `success` 选择显示 `data.name` 或 `message`。
+
+**本次练习与复习题。** 在 Postman 对照了路径改动前后的响应，练习后恢复原路径。口头预测了两种改动：改 `#{...}` 的名字时同步改 `@Param`，改查询结果的列别名时同步改对应的 `@Arg`。下次回顾时先预测 Controller 如果直接返回 `Student`，JSON 里还会有哪些字段，再解释原因。
 
 ## 记录约定
 
