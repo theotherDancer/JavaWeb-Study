@@ -5,7 +5,7 @@
 不要求一开始记住所有框架名字。先抓住主线：**Maven 准备项目依赖，Spring Boot 帮助启动应用，Tomcat 接收请求，Spring MVC 安排调用我们写的方法。**
 
 > 仓库记录起始：2026-10-28（Maven 历史记录）；JavaWeb 正式记录起始：2026-10-29。
-> 最近更新：2026-11-09。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
+> 最近更新：2026-11-10。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
 
 > 示例说明：本文中的人名、学号均已改为示例化表述，仅用于解释代码与请求格式，不保证与本机数据库记录对应。运行验收只记录条数、字段及行为，不公开数据库名单原值。
 
@@ -21,14 +21,16 @@
 | 2026-11-06 | 按学号查询、POST 新增、业务校验、重复处理与边界验收 | [当天总结](#day-2026-11-06) · [新增流程图](#flow-2026-11-06) · [测试范围](#tests-2026-11-06) · [AI Coding](#ai-coding-2026-11-06) |
 | 2026-11-07 | JDBC 迁移 MyBatis、Mapper 与连接池、学习定位与 AI Coding 复盘 | [当天问答](#day-2026-11-07) · [连接池](#pool-2026-11-07) · [测试范围](#tests-2026-11-07) · [课程定位](#location-2026-11-07) · [AI Coding](#ai-coding-2026-11-07) |
 | 2026-11-09 | IoC、DI、Mapper 参数绑定与结果映射、JSON 响应 | [当天问答与流程图](#day-2026-11-09) |
+| 2026-11-10 | JavaScript 解析 JSON、用 fetch 调接口、学生查询页面 | [当天问答与流程图](#day-2026-11-10) · [查询页面源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-query.html) |
 
 
 10 月 28 日的 Maven 内容原先归档在 Database-Basics，已于 10 月 29 日复制到本仓库，保留原始来源和日期。今后 JavaWeb 及其 Maven 前置学习统一在这里接续记录；数据库仓库中的历史内容保留。
 
 ### 如何查看和运行代码
 
-- [SpringBoot_javaWeb_quickstart](SpringBoot_javaWeb_quickstart)：当前本机工程快照，最近同步日期 2026-11-07，包含 POM、启动类、Controller、资源配置、生成的测试类和 Maven Wrapper 文件。
+- [SpringBoot_javaWeb_quickstart](SpringBoot_javaWeb_quickstart)：当前本机工程快照，最近同步日期 2026-11-10，包含 POM、启动类、Controller、资源配置、生成的测试类和 Maven Wrapper 文件。
 - IDEA 打开该子目录的 pom.xml 加载工程；运行 SpringBootJavaWebQuickstartApplication 启动类，再访问 http://localhost:8080/hello。
+- [学生查询页面源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-query.html) 位于 `src/main/resources/static`。启动应用后访问 `http://localhost:8080/student-query.html`，当前可体验输入提示和回显。
 - 当前 POM 为 Spring Boot 4.1.2、目标 Java 17，使用 spring-boot-starter-webmvc；本机学习时选用 JDK 25。可继续使用 IDEA 配置的 Maven。Wrapper 自身配置了发行版，不等于此前 IDEA 的内置 Maven 版本。
 - [HelloController.java](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/Controller/HelloController.java) 当前返回 `Hello world!喵`。下文 `Hello world!` 是讲解时的示例，二者不矛盾。
 - 源码保留原貌。其中旧注释“告诉浏览器这是请求处理类”不准确，应理解为“告诉 Spring 这个类用于处理请求”；以下概念说明以此为准。
@@ -45,20 +47,20 @@
 
 ## 当前进度
 
-- 最近学习：2026-11-09，沿按学号查询串联 Spring 对象装配、Spring MVC 请求响应和 MyBatis 输入输出。参见[当天记录](#day-2026-11-09)。
-- 最近代码同步：2026-11-07，将学生按学号查询、查询全部、新增从手写 JDBC 迁移到 MyBatis；参见[本日问答](#day-2026-11-07)和[测试证据](#tests-2026-11-07)。
+- 最近学习：2026-11-10，练习浏览器用 JavaScript 发请求、解析 JSON 和搭建页面交互。参见[当天记录](#day-2026-11-10)。
+- 最近代码同步：2026-11-10，新增学生查询练习页面，已实现空输入提示和去掉首尾空白后的回显。后端 MyBatis 迁移记录见 [11 月 7 日问答](#day-2026-11-07)和[测试证据](#tests-2026-11-07)。
 - 当前结构：Controller 接收请求、组织响应；Service 校验、查重、安排业务步骤；构造方法注入的 StudentMapper 代理执行 SQL、绑定参数、映射结果。连接经 DataSource 和连接池管理，MyBatis 底层仍使用 JDBC。
 - Mapper 使用 @Select、@Insert、@Param 与显式构造映射；Student 仍使用双参数构造方法，查询返回学号与姓名，不显示年龄。
 - 保留旧 JDBC 实现的块注释及 StudentDao，作为人工复查、对比学习材料；不清理、不额外重构，旧方法不在生效调用链中。
 - 新增规则不变：学号、姓名、年龄必填；学号和姓名不能只有空白；年龄 0～150；重复学号不得覆盖。数据库唯一约束仍生效，Controller 增加 Spring DuplicateKeyException 兜底。
-- 本日由学习者验证：有/无匹配学号、完整列表、正常新增后查询、重复拒绝且原姓名未覆盖、年龄 151 拒绝且未新增。先前版本的其他边界测试保留在历史记录，不自动算作本次迁移后的逐项复测。
+- 11 月 7 日由学习者验证：有/无匹配学号、完整列表、正常新增后查询、重复拒绝且原姓名未覆盖、年龄 151 拒绝且未新增。先前版本的其他边界测试保留在历史记录，不自动算作本次迁移后的逐项复测。
 - 工具已检查实际源码与 POM；用户截图确认依赖树命令成功及 HikariCP 建立连接。归档时隔离副本的离线 Maven compile 因父 POM 缓存来源标识不匹配，在依赖解析阶段失败，未进入编译；不宣称独立构建或全量测试通过。
-- 未验收范围：数据库重复键异常分支、并发、其他输入边界、故障、性能；本日不重发写请求，不启动 contextLoads。
+- 11 月 7 日未验收范围：数据库重复键异常分支、并发、其他输入边界、故障、性能。当时未重发写请求或运行 contextLoads。
 - 连接池：已理解复用、借还、限制、等待超时及 DataSource/Connection/Mapper 的区别；实际依赖 HikariCP 7.0.2，未调参。不是连接数越大越好。
 - Lombok 只介绍用途，未添加依赖或改写实体；统一异常处理、自定义业务异常、HTTP 状态码体系、Spring 事务等尚未正式实施，部分业务失败仍返回 HTTP 200。
 - 学习定位：Level 1 的 Java/MySQL/JDBC 已有指导练习；Level 2 Web 基础为主线，提前进入部分 Level 3 框架入门。前端、会话、上传下载、完整综合项目及部分基础缺口仍待补齐，不能称整级学完。
 - 后续按实际掌握情况安排 Lombok、MyBatis 修改/删除、参数安全与条件查询，再补 XML、动态 SQL、错误处理、事务与测试。网课参考，全目录查漏，实际项目验收，每天复盘纠偏。
-- 本日公开归档仅包含自有学习代码和通用总结，不上传保密材料、内部项目、密码或网络配置；不代表历史文件和历史提交已经全面审计。历史章节按各自日期理解，最新状态以本节与 11 月 7 日章节为准。
+- 本日公开归档仅包含自有学习代码和通用总结，不上传保密材料、内部项目、密码或网络配置；不代表历史文件和历史提交已经全面审计。历史章节按各自日期理解，后端迁移的验证范围见 11 月 7 日记录，页面的最新进度见 11 月 10 日记录。
 
 ## 学习路线
 
@@ -72,11 +74,13 @@
 | Level 3 部分框架入门 | MyBatis 注解、参数与结果映射、Boot 数据访问、HikariCP | 当前重点：三个操作已迁移并进行限定场景验证；不代表 Level 3 整体完成 |
 | 会话状态管理 | Cookie、Session、登录状态保持 | 待正式学习 |
 | 文件上传与下载 | 上传与下载实操 | 待学习 |
-| 前后端分离技术 | MVC、JSON、Axios、跨域 | 待学习 |
+| 前后端分离技术 | MVC、JSON、HTTP 客户端、跨域 | 已练习同源页面的 JSON 处理与控制台 fetch；按钮联调、Axios、跨域和分开部署待学习 |
 
 目前借助 Spring Boot 和 MyBatis 搭建可运行的 Web 示例，学习横跨 Level 2 Web 基础与部分 Level 3 框架；并未完成整级课程。参见[全层级定位](#location-2026-11-07)。
 
 ## 知识点索引
+
+- [JavaScript 解析 JSON、fetch 请求与页面交互](#day-2026-11-10)
 
 - [IoC、DI 与 Bean，MyBatis 的输入输出和 JSON 响应](#day-2026-11-09)
 
@@ -1379,6 +1383,37 @@ HTML/CSS、多线程、反射等仍有缺口，Git 独立操作需巩固；课�
 **数据库的一行怎样变成 JSON？** MyBatis 根据 `@ConstructorArgs` 和 `@Arg` 取出结果列，通过构造方法创建 `Student`。Controller 把它放进 `Result.data`，Spring MVC 再通过消息转换器把 `Result` 写成 JSON 响应。查不到记录时，本次练习观察到 HTTP 仍返回 `200 OK`，业务结果是 `success: false`、`data: null`。客户端可以根据 `success` 选择显示 `data.name` 或 `message`。
 
 **本次练习与复习题。** 在 Postman 对照了路径改动前后的响应，练习后恢复原路径。口头预测了两种改动：改 `#{...}` 的名字时同步改 `@Param`，改查询结果的列别名时同步改对应的 `@Arg`。下次回顾时先预测 Controller 如果直接返回 `Student`，JSON 里还会有哪些字段，再解释原因。
+
+<a id="day-2026-11-10"></a>
+
+### 2026-11-10 · 从 Postman 到浏览器里的学生查询页面
+
+**课程位置**：Level 2 JavaWeb 的前后端数据交互入门。用浏览器里的 JavaScript 消费已有的 Spring Boot 查询接口，练习页面和接口由同一个应用提供。
+
+#### 一、为什么 JavaScript 要先解析 JSON？
+
+后端的 `Result` 约定了 `success`、`message`、`data` 三个外层字段。Spring MVC 通过 JSON 转换器把 Java 对象写入 HTTP 响应体。手里有 JSON 字符串时，用 `JSON.parse()` 得到 JavaScript 对象。手里有 `fetch()` 返回的 `Response` 时，用 `await response.json()` 读取并解析响应体。
+
+```text
+浏览器 JavaScript 发起 GET /students/{studentId}
+    → Spring MVC 调用 StudentController，查询结果包装成 Result
+    → 浏览器收到 Response
+        ├─ response.status 查看 HTTP 状态码
+        └─ response.json() 读取并解析响应体
+            ├─ success 为 true  → 读取 data.name
+            └─ success 为 false → 读取 message
+```
+
+#### 二、为什么看到 200 还要判断 success？
+
+当前接口未查到学生时，可以返回 HTTP 200，并在 JSON 中给出 `success: false`、`data: null`。此时应显示 `message`，直接访问 `data.name` 会报错。排错时，页面脚本和 HTTP 请求分别看浏览器的 Console 和 Network，Java 后端输出看 IDEA 的 Run 窗口。
+
+#### 三、页面做到了哪一步？
+
+- [student-query.html](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-query.html) 已实现按钮点击、读取输入、`trim()`、空输入提示和非空输入回显。去掉首尾空格只是输入整理。是否允许汉字等格式规则应由接口约定，前端可提前提示，后端负责校验。
+- 学习者在浏览器控制台执行 `fetch()`，确认看到 HTTP 200 并得到预期查询数据。归档时用 Node 和模拟 DOM 验证了空白输入提示、去空白后的回显。
+- 当前按钮事件尚未调用接口。下次由学习者先写按钮到 API 的调用，验收空输入不发请求、匹配学号显示姓名、不匹配学号显示后端提示。用 Network 核对请求和响应，避免把控制台实验算成页面联调通过。
+- 教学复盘：独立练习时，先约定改动位置和验收条件，学习者写完后再检查，卡住时按需给提示。
 
 ## 记录约定
 
