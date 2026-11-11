@@ -20,15 +20,23 @@
 
 
         // 点击时读取输入框当前的值，再把它显示在页面上。
-        queryButton.addEventListener("click", function () {
+        queryButton.addEventListener("click",  async function () {
             const studentId = studentIdInput.value.trim();
 
             if (studentId === "") {
                 queryResult.textContent = "请输入学号";
                 return;
             }
-
-            queryResult.textContent = "你输入的学号是 " + studentId;
+            const queryUrl = "/students/" + studentId;
+            const  response=await fetch(queryUrl);
+            const result=await response.json();
+            console.log(result);
+            if(result.success) {
+                queryResult.textContent = "姓名： " + result.data.name;
+            }
+            else{
+                queryResult.textContent = result.message;
+            }
         });
 
 </script>

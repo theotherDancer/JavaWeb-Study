@@ -5,7 +5,7 @@
 不要求一开始记住所有框架名字。先抓住主线：**Maven 准备项目依赖，Spring Boot 帮助启动应用，Tomcat 接收请求，Spring MVC 安排调用我们写的方法。**
 
 > 仓库记录起始：2026-10-28（Maven 历史记录）；JavaWeb 正式记录起始：2026-10-29。
-> 最近更新：2026-11-10。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
+> 最近更新：2026-11-11。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
 
 > 示例说明：本文中的人名、学号均已改为示例化表述，仅用于解释代码与请求格式，不保证与本机数据库记录对应。运行验收只记录条数、字段及行为，不公开数据库名单原值。
 
@@ -22,15 +22,16 @@
 | 2026-11-07 | JDBC 迁移 MyBatis、Mapper 与连接池、学习定位与 AI Coding 复盘 | [当天问答](#day-2026-11-07) · [连接池](#pool-2026-11-07) · [测试范围](#tests-2026-11-07) · [课程定位](#location-2026-11-07) · [AI Coding](#ai-coding-2026-11-07) |
 | 2026-11-09 | IoC、DI、Mapper 参数绑定与结果映射、JSON 响应 | [当天问答与流程图](#day-2026-11-09) |
 | 2026-11-10 | JavaScript 解析 JSON、用 fetch 调接口、学生查询页面 | [当天问答与流程图](#day-2026-11-10) · [查询页面源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-query.html) |
+| 2026-11-11 | 学生查询与新增页面联调、JSON 请求体、业务提示 | [当天问答与流程图](#day-2026-11-11) · [查询页源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-query.html) · [新增页源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-create.html) · [验证范围](#tests-2026-11-11) |
 
 
 10 月 28 日的 Maven 内容原先归档在 Database-Basics，已于 10 月 29 日复制到本仓库，保留原始来源和日期。今后 JavaWeb 及其 Maven 前置学习统一在这里接续记录；数据库仓库中的历史内容保留。
 
 ### 如何查看和运行代码
 
-- [SpringBoot_javaWeb_quickstart](SpringBoot_javaWeb_quickstart)：当前本机工程快照，最近同步日期 2026-11-10，包含 POM、启动类、Controller、资源配置、生成的测试类和 Maven Wrapper 文件。
+- [SpringBoot_javaWeb_quickstart](SpringBoot_javaWeb_quickstart)：当前本机工程快照，前端页面最近同步于 2026-11-11，包含 POM、启动类、Controller、资源配置、生成的测试类和 Maven Wrapper 文件。
 - IDEA 打开该子目录的 pom.xml 加载工程；运行 SpringBootJavaWebQuickstartApplication 启动类，再访问 http://localhost:8080/hello。
-- [学生查询页面源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-query.html) 位于 `src/main/resources/static`。启动应用后访问 `http://localhost:8080/student-query.html`，当前可体验输入提示和回显。
+- 启动应用后打开 `http://localhost:8080/student-query.html` 查询学生，或打开 `http://localhost:8080/student-create.html` 提交新增。两个页面均位于 `src/main/resources/static`。[查询页源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-query.html) · [新增页源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-create.html)
 - 当前 POM 为 Spring Boot 4.1.2、目标 Java 17，使用 spring-boot-starter-webmvc；本机学习时选用 JDK 25。可继续使用 IDEA 配置的 Maven。Wrapper 自身配置了发行版，不等于此前 IDEA 的内置 Maven 版本。
 - [HelloController.java](SpringBoot_javaWeb_quickstart/src/main/java/com/zhangyihang/springboot_javaweb_quickstart/Controller/HelloController.java) 当前返回 `Hello world!喵`。下文 `Hello world!` 是讲解时的示例，二者不矛盾。
 - 源码保留原貌。其中旧注释“告诉浏览器这是请求处理类”不准确，应理解为“告诉 Spring 这个类用于处理请求”；以下概念说明以此为准。
@@ -47,8 +48,8 @@
 
 ## 当前进度
 
-- 最近学习：2026-11-10，练习浏览器用 JavaScript 发请求、解析 JSON 和搭建页面交互。参见[当天记录](#day-2026-11-10)。
-- 最近代码同步：2026-11-10，新增学生查询练习页面，已实现空输入提示和去掉首尾空白后的回显。后端 MyBatis 迁移记录见 [11 月 7 日问答](#day-2026-11-07)和[测试证据](#tests-2026-11-07)。
+- 最近学习：2026-11-11，完成同源页面的 GET 查询与 POST 新增联调，沿后端异常追到网页业务提示。参见[当天记录](#day-2026-11-11)。
+- 最近代码同步：2026-11-11，更新学生查询页并新增学生提交页。后端 MyBatis 迁移记录见 [11 月 7 日问答](#day-2026-11-07)和[测试证据](#tests-2026-11-07)。
 - 当前结构：Controller 接收请求、组织响应；Service 校验、查重、安排业务步骤；构造方法注入的 StudentMapper 代理执行 SQL、绑定参数、映射结果。连接经 DataSource 和连接池管理，MyBatis 底层仍使用 JDBC。
 - Mapper 使用 @Select、@Insert、@Param 与显式构造映射；Student 仍使用双参数构造方法，查询返回学号与姓名，不显示年龄。
 - 保留旧 JDBC 实现的块注释及 StudentDao，作为人工复查、对比学习材料；不清理、不额外重构，旧方法不在生效调用链中。
@@ -60,7 +61,7 @@
 - Lombok 只介绍用途，未添加依赖或改写实体；统一异常处理、自定义业务异常、HTTP 状态码体系、Spring 事务等尚未正式实施，部分业务失败仍返回 HTTP 200。
 - 学习定位：Level 1 的 Java/MySQL/JDBC 已有指导练习；Level 2 Web 基础为主线，提前进入部分 Level 3 框架入门。前端、会话、上传下载、完整综合项目及部分基础缺口仍待补齐，不能称整级学完。
 - 后续按实际掌握情况安排 Lombok、MyBatis 修改/删除、参数安全与条件查询，再补 XML、动态 SQL、错误处理、事务与测试。网课参考，全目录查漏，实际项目验收，每天复盘纠偏。
-- 本日公开归档仅包含自有学习代码和通用总结，不上传保密材料、内部项目、密码或网络配置；不代表历史文件和历史提交已经全面审计。历史章节按各自日期理解，后端迁移的验证范围见 11 月 7 日记录，页面的最新进度见 11 月 10 日记录。
+- 本日公开归档仅包含自有学习代码和通用总结，不上传保密材料、内部项目、密码或网络配置；不代表历史文件和历史提交已经全面审计。历史章节按各自日期理解，后端迁移的验证范围见 11 月 7 日记录，页面的最新进度见 11 月 11 日记录。
 
 ## 学习路线
 
@@ -74,11 +75,13 @@
 | Level 3 部分框架入门 | MyBatis 注解、参数与结果映射、Boot 数据访问、HikariCP | 当前重点：三个操作已迁移并进行限定场景验证；不代表 Level 3 整体完成 |
 | 会话状态管理 | Cookie、Session、登录状态保持 | 待正式学习 |
 | 文件上传与下载 | 上传与下载实操 | 待学习 |
-| 前后端分离技术 | MVC、JSON、HTTP 客户端、跨域 | 已练习同源页面的 JSON 处理与控制台 fetch；按钮联调、Axios、跨域和分开部署待学习 |
+| 前后端分离技术 | MVC、JSON、HTTP 客户端、跨域 | 已完成同源查询与新增页面联调。已了解不同端口的来源区别，Axios、CORS 配置练习与分开部署待学习 |
 
 目前借助 Spring Boot 和 MyBatis 搭建可运行的 Web 示例，学习横跨 Level 2 Web 基础与部分 Level 3 框架；并未完成整级课程。参见[全层级定位](#location-2026-11-07)。
 
 ## 知识点索引
+
+- [同源页面 GET 查询、POST 新增、业务提示与排错](#day-2026-11-11)
 
 - [JavaScript 解析 JSON、fetch 请求与页面交互](#day-2026-11-10)
 
@@ -1414,6 +1417,45 @@ HTML/CSS、多线程、反射等仍有缺口，Git 独立操作需巩固；课�
 - 学习者在浏览器控制台执行 `fetch()`，确认看到 HTTP 200 并得到预期查询数据。归档时用 Node 和模拟 DOM 验证了空白输入提示、去空白后的回显。
 - 当前按钮事件尚未调用接口。下次由学习者先写按钮到 API 的调用，验收空输入不发请求、匹配学号显示姓名、不匹配学号显示后端提示。用 Network 核对请求和响应，避免把控制台实验算成页面联调通过。
 - 教学复盘：独立练习时，先约定改动位置和验收条件，学习者写完后再检查，卡住时按需给提示。
+
+<a id="day-2026-11-11"></a>
+
+### 2026-11-11 · 学生查询与新增页面联调
+
+今天在 **Level 2 → JavaWeb → 前后端分离入门**，把控制台里的 `fetch()` 练习接到两个独立的 HTML 页面。页面和接口由同一个 Spring Boot 应用提供。
+
+#### 一、查询按钮怎样使用后端结果？
+
+点击回调执行时读取输入框当前值，用 `trim()` 去掉首尾空白。空白时写入提示并 `return`。有学号时请求 `GET /students/{studentId}`，调用 `response.json()` 后根据 `success` 选择显示 `data.name` 或 `message`。
+
+#### 二、在新增页填的数据，怎样成为 POST 请求体？
+
+学号和姓名作为字符串。即使年龄框是 `type="number"`，`.value` 读到的也是字符串。先检查是否留空，再用 `Number()` 转换，因为 `Number("")` 会得到 `0`。组装学生对象后，用 `JSON.stringify()` 生成 JSON 文本。`options.body` 放这段文本，`Content-Type: application/json` 声明其格式。
+
+```text
+输入框 → 必填校验与类型转换 → JavaScript 学生对象
+    → JSON.stringify() → fetch POST /students
+    → Spring MVC 读取 @RequestBody → Controller → Service → Mapper
+    → Result → HTTP 响应体 → response.json() → textContent
+```
+
+#### 三、「学号已存在」是前端写死的吗？
+
+Service 先按学号查询。查到已有记录时，`StudentService.create()` 抛出带有该消息的 `IllegalArgumentException`。Controller 在 `catch` 中用 `e.getMessage()` 把消息写入 `Result.message`。Spring MVC 将 `Result` 序列化，前端从解析后的对象取 `message` 并更新页面。HTTP `200` 表示收到成功状态的 HTTP 响应，响应体里的 `success` 才表示这次新增的业务结果。
+
+<a id="tests-2026-11-11"></a>
+
+#### 四、验证范围与排错
+
+| 验证方式 | 观察到的结果 |
+|---|---|
+| 查询页模拟点击，非空用例连接本机后端 | 空白学号提示且无查询请求。存在时显示姓名，不存在时显示后端提示。 |
+| 学习者在 Edge 中操作新增页和查询页 | 新增后能按学号回查。重复提交时，新增页显示「学号已存在」。 |
+| 归档前模拟两页的点击与响应 | 两页各通过三个用例。新增页验证了空年龄不发请求、POST JSON 字段与年龄类型，以及成功和重复提示的显示。 |
+
+排查时先确认文件已保存、地址栏指向 `8080` 上的正确页面、浏览器已刷新。IDEA 预览使用 `63342` 时，以 `/students` 开头的路径也会请求该端口，可能收到 404 HTML 并在 `.json()` 时报错。用 Console 看脚本输出和报错，用 Network 核对请求地址与响应。
+
+**下次起点。** 在浏览器补验页面上的「新增成功」提示，把三个必填提示显示到网页，再继续学习 HTTP 错误、网络失败和响应解析失败。
 
 ## 记录约定
 

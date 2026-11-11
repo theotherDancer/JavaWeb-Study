@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<label for="studentId">学号</label>
+<input id="studentId" type="text">
+
+<label for="studentName">姓名</label>
+<input id="studentName" type="text">
+
+<label for="studentAge">年龄</label>
+<input id="studentAge" type="number">
+<button id="createButton" type="button">新增</button>
+<p id="createMessage"></p>
+
+
+<!-- <script>
+    const submitButton = document.getElementById("createButton");
+
+
+    submitButton.addEventListener("click", function () {
+        console.log("点了新增");
+        const age = Age.value;
+        console.log(age, typeof age);
+    });
+</script>-->
+<script>
+    const createButton = document.getElementById("createButton");
+    const ageInput = document.getElementById("studentAge");
+    const nameInput = document.getElementById("studentName");
+    const idInput = document.getElementById("studentId");
+    const createMessageElement = document.getElementById("createMessage");
+
+    createButton.addEventListener("click", async function () {
+        console.log("点了新增");
+
+        const age = ageInput.value;
+        if ( age=== "") {
+            console.log("请输入年龄~~");
+            return;
+        }
+        const ageNumber=Number(age);
+
+        const studentId=idInput.value.trim();
+        if ( studentId=== "") {
+            console.log("请输入学号~~");
+            return;
+        }
+        const studentName=nameInput.value.trim();
+        if ( studentName=== "") {
+            console.log("请输入姓名~~");
+            return;
+        }
+        //console.log(ageNumber, typeof ageNumber);
+        //console.log(studentId, typeof studentId);
+        //console.log(studentName, typeof studentName);
+        student={
+            studentId:studentId,
+            name:studentName,
+            age:ageNumber
+        };
+        console.log(student);
+        const bookText=JSON.stringify(student);
+        const options={
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:bookText
+        }
+        const response=await fetch("/students",options);
+            console.log(response.status);
+            const createResult = await response.json();
+            createMessageElement.textContent = createResult.message;
+            console.log(createResult);
+    });
+</script>
+</body>
+</html>
