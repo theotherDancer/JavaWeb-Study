@@ -5,7 +5,7 @@
 不要求一开始记住所有框架名字。先抓住主线：**Maven 准备项目依赖，Spring Boot 帮助启动应用，Tomcat 接收请求，Spring MVC 安排调用我们写的方法。**
 
 > 仓库记录起始：2026-10-28（Maven 历史记录）；JavaWeb 正式记录起始：2026-10-29。
-> 最近更新：2026-11-11。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
+> 最近更新：2026-11-12。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
 
 > 示例说明：本文中的人名、学号均已改为示例化表述，仅用于解释代码与请求格式，不保证与本机数据库记录对应。运行验收只记录条数、字段及行为，不公开数据库名单原值。
 
@@ -23,13 +23,14 @@
 | 2026-11-09 | IoC、DI、Mapper 参数绑定与结果映射、JSON 响应 | [当天问答与流程图](#day-2026-11-09) |
 | 2026-11-10 | JavaScript 解析 JSON、用 fetch 调接口、学生查询页面 | [当天问答与流程图](#day-2026-11-10) · [查询页面源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-query.html) |
 | 2026-11-11 | 学生查询与新增页面联调、JSON 请求体、业务提示 | [当天问答与流程图](#day-2026-11-11) · [查询页源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-query.html) · [新增页源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-create.html) · [验证范围](#tests-2026-11-11) |
+| 2026-11-12 | 新增页校验、HTTP 与 JSON 错误处理、接口文档和 Agent 协作 | [当天问答与流程图](#day-2026-11-12) · [新增页源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-create.html) · [验证范围](#tests-2026-11-12) · [AI Coding](#ai-coding-2026-11-12) |
 
 
 10 月 28 日的 Maven 内容原先归档在 Database-Basics，已于 10 月 29 日复制到本仓库，保留原始来源和日期。今后 JavaWeb 及其 Maven 前置学习统一在这里接续记录；数据库仓库中的历史内容保留。
 
 ### 如何查看和运行代码
 
-- [SpringBoot_javaWeb_quickstart](SpringBoot_javaWeb_quickstart)：当前本机工程快照，前端页面最近同步于 2026-11-11，包含 POM、启动类、Controller、资源配置、生成的测试类和 Maven Wrapper 文件。
+- [SpringBoot_javaWeb_quickstart](SpringBoot_javaWeb_quickstart)：当前本机工程快照，新增页最近同步于 2026-11-12，包含 POM、启动类、Controller、资源配置、生成的测试类和 Maven Wrapper 文件。
 - IDEA 打开该子目录的 pom.xml 加载工程；运行 SpringBootJavaWebQuickstartApplication 启动类，再访问 http://localhost:8080/hello。
 - 启动应用后打开 `http://localhost:8080/student-query.html` 查询学生，或打开 `http://localhost:8080/student-create.html` 提交新增。两个页面均位于 `src/main/resources/static`。[查询页源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-query.html) · [新增页源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-create.html)
 - 当前 POM 为 Spring Boot 4.1.2、目标 Java 17，使用 spring-boot-starter-webmvc；本机学习时选用 JDK 25。可继续使用 IDEA 配置的 Maven。Wrapper 自身配置了发行版，不等于此前 IDEA 的内置 Maven 版本。
@@ -48,8 +49,8 @@
 
 ## 当前进度
 
-- 最近学习：2026-11-11，完成同源页面的 GET 查询与 POST 新增联调，沿后端异常追到网页业务提示。参见[当天记录](#day-2026-11-11)。
-- 最近代码同步：2026-11-11，更新学生查询页并新增学生提交页。后端 MyBatis 迁移记录见 [11 月 7 日问答](#day-2026-11-07)和[测试证据](#tests-2026-11-07)。
+- 最近学习为 2026-11-12，练习新增页必填提示、HTTP 错误、网络失败和响应解析失败，预习 Swagger 与 Agent 协作。[当天记录](#day-2026-11-12)
+- 最近代码同步为 2026-11-12，更新新增页的校验和错误提示。后端 MyBatis 迁移见 [11 月 7 日问答](#day-2026-11-07)和[测试证据](#tests-2026-11-07)。
 - 当前结构：Controller 接收请求、组织响应；Service 校验、查重、安排业务步骤；构造方法注入的 StudentMapper 代理执行 SQL、绑定参数、映射结果。连接经 DataSource 和连接池管理，MyBatis 底层仍使用 JDBC。
 - Mapper 使用 @Select、@Insert、@Param 与显式构造映射；Student 仍使用双参数构造方法，查询返回学号与姓名，不显示年龄。
 - 保留旧 JDBC 实现的块注释及 StudentDao，作为人工复查、对比学习材料；不清理、不额外重构，旧方法不在生效调用链中。
@@ -61,7 +62,7 @@
 - Lombok 只介绍用途，未添加依赖或改写实体；统一异常处理、自定义业务异常、HTTP 状态码体系、Spring 事务等尚未正式实施，部分业务失败仍返回 HTTP 200。
 - 学习定位：Level 1 的 Java/MySQL/JDBC 已有指导练习；Level 2 Web 基础为主线，提前进入部分 Level 3 框架入门。前端、会话、上传下载、完整综合项目及部分基础缺口仍待补齐，不能称整级学完。
 - 后续按实际掌握情况安排 Lombok、MyBatis 修改/删除、参数安全与条件查询，再补 XML、动态 SQL、错误处理、事务与测试。网课参考，全目录查漏，实际项目验收，每天复盘纠偏。
-- 本日公开归档仅包含自有学习代码和通用总结，不上传保密材料、内部项目、密码或网络配置；不代表历史文件和历史提交已经全面审计。历史章节按各自日期理解，后端迁移的验证范围见 11 月 7 日记录，页面的最新进度见 11 月 11 日记录。
+- 本日公开归档仅包含自有学习代码和通用总结，不上传保密材料、内部项目、密码或网络配置；不代表历史文件和历史提交已经全面审计。历史章节按各自日期理解，后端迁移的验证范围见 11 月 7 日记录，页面的最新进度见 [11 月 12 日记录](#day-2026-11-12)。
 
 ## 学习路线
 
@@ -75,11 +76,13 @@
 | Level 3 部分框架入门 | MyBatis 注解、参数与结果映射、Boot 数据访问、HikariCP | 当前重点：三个操作已迁移并进行限定场景验证；不代表 Level 3 整体完成 |
 | 会话状态管理 | Cookie、Session、登录状态保持 | 待正式学习 |
 | 文件上传与下载 | 上传与下载实操 | 待学习 |
-| 前后端分离技术 | MVC、JSON、HTTP 客户端、跨域 | 已完成同源查询与新增页面联调。已了解不同端口的来源区别，Axios、CORS 配置练习与分开部署待学习 |
+| 前后端分离技术 | MVC、JSON、HTTP 客户端、跨域 | 已完成同源查询、新增页面联调及新增页错误处理。下一步练表单提交，再练 Axios、CORS 和分开部署。 |
 
 目前借助 Spring Boot 和 MyBatis 搭建可运行的 Web 示例，学习横跨 Level 2 Web 基础与部分 Level 3 框架；并未完成整级课程。参见[全层级定位](#location-2026-11-07)。
 
 ## 知识点索引
+
+- [新增页必填校验、HTTP 与 JSON 错误处理](#day-2026-11-12) · [验证范围](#tests-2026-11-12) · [接口文档与 Agent 协作](#ai-coding-2026-11-12)
 
 - [同源页面 GET 查询、POST 新增、业务提示与排错](#day-2026-11-11)
 
@@ -1456,6 +1459,65 @@ Service 先按学号查询。查到已有记录时，`StudentService.create()` �
 排查时先确认文件已保存、地址栏指向 `8080` 上的正确页面、浏览器已刷新。IDEA 预览使用 `63342` 时，以 `/students` 开头的路径也会请求该端口，可能收到 404 HTML 并在 `.json()` 时报错。用 Console 看脚本输出和报错，用 Network 核对请求地址与响应。
 
 **下次起点。** 在浏览器补验页面上的「新增成功」提示，把三个必填提示显示到网页，再继续学习 HTTP 错误、网络失败和响应解析失败。
+
+<a id="day-2026-11-12"></a>
+
+### 2026-11-12 · 新增页校验、请求异常处理与开发流程预习
+
+今天继续 **Level 2 → JavaWeb → 前后端分离入门**。在已经能查询和新增学生的基础上，为新增页补齐必填提示、HTTP 错误、网络失败和响应解析失败的反馈。随后用《苍穹外卖》预习接口文档、Nginx 和 Agent 参与开发时的分工。
+
+#### 一、「请输入姓名」显示在哪里？什么情况会发请求？
+
+页面里的 `<p id="createMessage">` 决定提示的位置。JavaScript 先用 `getElementById()` 拿到这个元素，再设置它的 `textContent`。年龄、学号或姓名为空时，显示对应的提示并 `return`，本次点击就会在 `fetch()` 之前结束。
+
+年龄框即使用了 `type="number"`，读取 `.value` 得到的仍是字符串。先检查空值，再用 `Number()` 转换，因为 `Number("")` 会得到 `0`。学号和姓名用 `trim()` 去掉首尾空白。文本框可以输入 `+`，业务是否接受它取决于校验规则。数字框里单独一个 `+` 无法形成有效数值。
+
+#### 二、为什么 `404`、脱机和业务失败要分别处理？
+
+```text
+点击新增 → 读取表单 → 必填检查 → POST /students
+  ├─ fetch 抛错 → 显示网络连接提示
+  ├─ 收到响应且 !response.ok → 显示 HTTP 状态码
+  └─ 收到成功状态的响应 → response.json()
+       ├─ 解析失败 → 显示无法读取服务器返回的结果
+       └─ 解析成功 → 显示业务响应中的 message
+```
+
+- **`404` 是一个 HTTP 响应。** 请求不存在的测试路径时，`await fetch()` 仍得到 `Response`。`response.status` 是 `404`，`response.ok` 为 `false`。页面显示状态码后结束本次处理。
+- **脱机发生在收到 HTTP 响应之前。** 在 Edge 的 Network 切到脱机时，同一条查询请求触发 `Failed to fetch`，由包住 `await fetch()` 的 `catch` 捕获。测试前先填齐表单，否则必填检查会先结束点击处理。
+- **业务结果在 JSON 响应体里。** 本项目新增成功和「学号已存在」都可返回 HTTP `200`。`.json()` 解析后的对象带有 `success` 和 `message`，页面用 `message` 显示本次结果。
+
+#### 三、为什么响应是 `200`，`.json()` 还是可能报错？
+
+调试时故意让请求读取 `student-create.html`，服务端会提供 HTML。即使 `response.ok` 为 `true`，`.json()` 仍会因为开头的 `<!DOCTYPE` 无法按 JSON 解析而失败。真实项目里，登录过期后接口如果先返回 `302`，浏览器可能跟随跳转，最终拿到 `200` 的登录页。这也是先看状态、再看响应体的原因。
+
+`response` 和 `createResult` 分别用 `let` 声明在各自 `try` 块外，这样后续分支才能读取它们。`createResult` 只有在 `.json()` 成功后才有值。解析失败的 `catch` 显示提示并 `return`，避免继续读取 `createResult.message` 而产生 `Cannot read properties of undefined`。
+
+在浏览器 Console 做独立实验时，直接写在顶层的 `return` 会触发语法错误，页面点击回调里的 `options` 也超出该实验的作用域。排查页面时先确认保存并刷新，再用 Network 核对实际 URL、方法、状态码和响应体。
+
+<a id="tests-2026-11-12"></a>
+
+#### 四、实际验证了哪些情况？
+
+| 验证方式 | 观察到的结果 |
+|---|---|
+| 在 Edge 操作新增页和查询页 | 看到「新增成功」，并能按学号回查。必填提示显示在网页。 |
+| 在 Edge 操作临时测试路径 | 不存在的路径触发网页的 HTTP `404` 提示。读取 HTML 触发网页的 JSON 解析失败提示。 |
+| 在 Edge Console 对照同一条 GET 请求 | 正常联网得到 `200`，切换脱机后看到 `Failed to fetch`。 |
+| 恢复正式接口 | 恢复 `POST /students` 后，学习者确认测试成功。 |
+| 归档前用模拟 DOM 和 `fetch()` 执行 IDEA 中的页面脚本 | 通过八个用例，覆盖三个必填分支、网络失败、`404`、`200` 返回 HTML、业务成功与重复学号。所有发出的模拟请求均使用 `POST /students`、JSON 请求体和数值年龄。模拟验收不写入数据库。 |
+
+<a id="ai-coding-2026-11-12"></a>
+
+#### 五、接口文档、用户故事和 Agent 怎样接到项目里？
+
+OpenAPI 描述 HTTP 方法、路径、参数、请求体和响应。Swagger UI 把接口约定显示成网页，也可以从页面发出真实请求。用已有的查询与新增接口做了对照讲解，Swagger UI 尚未集成到学生项目。
+
+以「管理员按学号修正学生姓名」为例，用户故事说明使用者、目标和原因。验收条件要补齐学号不存在、新姓名为空、改完能查询到新值、年龄保持原值等场景。交给 Agent 的任务还要附上代码入口、接口约定、修改范围和验证办法。产品确认业务规则，工程和测试负责人确认技术约定与验收证据。Agent 可以整理需求、找歧义、实现和运行测试。
+
+预习《苍穹外卖》时，对照了需求、设计、编码、测试、上线运维的流程，以及项目、产品、UI、架构、开发、测试和运维的职责。P5 使用 Nginx 提供已打包的管理端页面，并将 `/api/` 转发给 Spring Boot。已找到运行包和可编辑的 Vue 2 + TypeScript 源码，尚未在本机搭建。[黑马《苍穹外卖》](https://www.bilibili.com/video/BV1TP411v7v6/) · [管理端源码](https://github.com/HeFeng-Lab/project-sky-admin-vue-ts)
+
+**下次起点。** 学习 `<form>` 的 `submit` 事件与 `preventDefault()`，让点击「新增」和按回车走同一套校验与提交。用 Network 确认每次有效提交只发一条 `POST /students`。
 
 ## 记录约定
 

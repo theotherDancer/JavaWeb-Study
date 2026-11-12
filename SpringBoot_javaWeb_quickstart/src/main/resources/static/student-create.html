@@ -39,25 +39,25 @@
 
         const age = ageInput.value;
         if ( age=== "") {
-            console.log("请输入年龄~~");
+            createMessageElement.textContent="请输入年龄："
             return;
         }
         const ageNumber=Number(age);
 
         const studentId=idInput.value.trim();
         if ( studentId=== "") {
-            console.log("请输入学号~~");
+            createMessageElement.textContent="请输入id："
             return;
         }
         const studentName=nameInput.value.trim();
         if ( studentName=== "") {
-            console.log("请输入姓名~~");
+            createMessageElement.textContent="请输入姓名："
             return;
         }
         //console.log(ageNumber, typeof ageNumber);
         //console.log(studentId, typeof studentId);
         //console.log(studentName, typeof studentName);
-        student={
+         const student={
             studentId:studentId,
             name:studentName,
             age:ageNumber
@@ -69,11 +69,37 @@
             headers:{"Content-Type":"application/json"},
             body:bookText
         }
-        const response=await fetch("/students",options);
+     //   const response=await fetch("/student",options);
+        let response;
+
+        try {
+            // 把 await fetch(...) 的结果赋给 response
+            // response=await fetch("/students",options);
+            response = await fetch("/students", options);
+        } catch (error) {
+            // 用 textContent 显示「请求失败，请检查网络连接」
+            createMessageElement.textContent="请求失败，请检查网络连接~";
+            return;
+        }
             console.log(response.status);
-            const createResult = await response.json();
-            createMessageElement.textContent = createResult.message;
-            console.log(createResult);
+
+        if (!response.ok){
+            createMessageElement.textContent="请求失败，状态码："+response.status;
+            return;
+        }
+
+        let createResult;
+        try{
+            createResult = await response.json();
+            }
+        catch(error){
+            //createMessageElement.textContent = createResult.message;
+            //console.log(createResult);
+            createMessageElement.textContent="无法读取服务器返回的结果";
+            return;
+        }
+        createMessageElement.textContent = createResult.message;
+        console.log(createResult);
     });
 </script>
 </body>
