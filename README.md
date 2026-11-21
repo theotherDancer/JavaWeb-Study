@@ -5,7 +5,7 @@
 不要求一开始记住所有框架名字。先抓住主线：**Maven 准备项目依赖，Spring Boot 帮助启动应用，Tomcat 接收请求，Spring MVC 安排调用我们写的方法。**
 
 > 仓库记录起始：2026-10-28（Maven 历史记录）；JavaWeb 正式记录起始：2026-10-29。
-> 最近更新：2026-11-12。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
+> 最近更新：2026-11-21。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
 
 > 示例说明：本文中的人名、学号均已改为示例化表述，仅用于解释代码与请求格式，不保证与本机数据库记录对应。运行验收只记录条数、字段及行为，不公开数据库名单原值。
 
@@ -24,7 +24,7 @@
 | 2026-11-10 | JavaScript 解析 JSON、用 fetch 调接口、学生查询页面 | [当天问答与流程图](#day-2026-11-10) · [查询页面源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-query.html) |
 | 2026-11-11 | 学生查询与新增页面联调、JSON 请求体、业务提示 | [当天问答与流程图](#day-2026-11-11) · [查询页源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-query.html) · [新增页源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-create.html) · [验证范围](#tests-2026-11-11) |
 | 2026-11-12 | 新增页校验、HTTP 与 JSON 错误处理、接口文档和 Agent 协作 | [当天问答与流程图](#day-2026-11-12) · [新增页源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-create.html) · [验证范围](#tests-2026-11-12) · [AI Coding](#ai-coding-2026-11-12) |
-
+| 2026-11-21 | Spring Boot 复习：请求响应、统一响应、三层架构、IoC/DI | [修正批注版笔记](#day-2026-11-21) |
 
 10 月 28 日的 Maven 内容原先归档在 Database-Basics，已于 10 月 29 日复制到本仓库，保留原始来源和日期。今后 JavaWeb 及其 Maven 前置学习统一在这里接续记录；数据库仓库中的历史内容保留。
 
@@ -49,7 +49,8 @@
 
 ## 当前进度
 
-- 最近学习为 2026-11-12，练习新增页必填提示、HTTP 错误、网络失败和响应解析失败，预习 Swagger 与 Agent 协作。[当天记录](#day-2026-11-12)
+- 2026-11-21：归档 Spring Boot 复习笔记修正批注版，复习请求响应、统一响应、三层架构与 IoC/DI；仅更新笔记，未同步练习项目代码。[完整笔记](#day-2026-11-21)
+- 2026-11-12 学习记录：练习新增页必填提示、HTTP 错误、网络失败和响应解析失败，预习 Swagger 与 Agent 协作。[当天记录](#day-2026-11-12)
 - 最近代码同步为 2026-11-12，更新新增页的校验和错误提示。后端 MyBatis 迁移见 [11 月 7 日问答](#day-2026-11-07)和[测试证据](#tests-2026-11-07)。
 - 当前结构：Controller 接收请求、组织响应；Service 校验、查重、安排业务步骤；构造方法注入的 StudentMapper 代理执行 SQL、绑定参数、映射结果。连接经 DataSource 和连接池管理，MyBatis 底层仍使用 JDBC。
 - Mapper 使用 @Select、@Insert、@Param 与显式构造映射；Student 仍使用双参数构造方法，查询返回学号与姓名，不显示年龄。
@@ -1518,6 +1519,117 @@ OpenAPI 描述 HTTP 方法、路径、参数、请求体和响应。Swagger UI �
 预习《苍穹外卖》时，对照了需求、设计、编码、测试、上线运维的流程，以及项目、产品、UI、架构、开发、测试和运维的职责。P5 使用 Nginx 提供已打包的管理端页面，并将 `/api/` 转发给 Spring Boot。已找到运行包和可编辑的 Vue 2 + TypeScript 源码，尚未在本机搭建。[黑马《苍穹外卖》](https://www.bilibili.com/video/BV1TP411v7v6/) · [管理端源码](https://github.com/HeFeng-Lab/project-sky-admin-vue-ts)
 
 **下次起点。** 学习 `<form>` 的 `submit` 事件与 `preventDefault()`，让点击「新增」和按回车走同一套校验与提交。用 Network 确认每次有效提交只发一条 `POST /students`。
+
+<a id="day-2026-11-21"></a>
+
+## 2026-11-21：Spring Boot 复习笔记（修正批注版）
+
+来源：桌面 `springboot复习.md`。保留笔记原文及对应批注；仅调整标题层级以适配 README。本节仅归档笔记，不代表其中所有示例均已运行验证，也未上传本机练习项目。
+
+## Spring Boot 复习笔记
+
+> 原笔记内容保留；补充与纠正以「批注」形式放在对应内容附近。
+
+### 一：如何创建一个springboot工程：
+
+1.首先左侧选择Spring，填写好相关信息版本路径之类的下一步依赖选择Springweb。创建之后会有一系列文件，其中有一个启动类，有注解标注。还有一个pom.xml文件,里面写了相关配置信息比如版本，依赖，有spring框架的依赖还有一个Spring单元测试的依赖，另外还有一个Maven插件，注意这里的关系：是Maven启动springboot而不是相反，这个插件就是为了Maven能够管理springboot
+
+> **批注：** Maven 负责依赖管理、编译、测试、打包等；`spring-boot-maven-plugin` 提供 Spring Boot 应用的运行、可执行包打包等功能。**Spring Boot 也可以直接运行启动类的 `main` 方法启动，并不是必须通过 Maven 或这个插件启动。**
+
+2.创建请求处理类，这里涉及到两个注解：一个是@RestController（说明：@Restcontroller==@Controller+@ResponseBody）,这个是写在类上面的，这个注解用来标记一个类，接收HTTP请求，并且把方法的返回值作为响应（JSON）直接返回客户端。第二个注解是@GetMapping，这个注解是直接写在某个方法之前的，在这里表现为 @GetMapping("/hello")，表示这个方法只响应/hello的Get请求
+
+> **批注：** 注解名称的大小写应为 `@RestController`。它相当于 `@Controller` 加类级别的 `@ResponseBody`。返回值直接写入响应体，但不一定是 JSON：通常字符串返回文本，对象和集合转换成 JSON，具体由 HTTP 消息转换器及内容协商等决定。`@GetMapping` 定义 GET 请求映射；Spring MVC 通常也支持通过对应 GET 映射处理 HEAD 请求。
+
+3.启动之后会自动占用一个端口号8080
+
+> **批注：** 对当前这类 Web 项目，更准确地说是默认尝试监听 `8080` 端口，可以通过 `server.port` 修改；端口被占用时，通常会启动失败。并非所有 Spring Boot 项目都会启动 Web 服务器。
+
+### 二：说说统一响应
+
+1.@ResponseBody可以作用在类或者方法上，作用是将返回的实体对象或者集合转换为JSON格式，如果是单纯的值就直接返回值
+
+> **批注：** **`@ResponseBody` 的核心含义是将返回值写入 HTTP 响应体，而不是作为视图名称解析。** 对象、集合通常转换成 JSON，字符串通常直接返回文本；数值等简单类型也可能通过 JSON 转换器输出，不能仅按“简单值或对象”划分。
+
+2.因此可能出现这样的情况，有的方法的返回值是字符串，有的是对象，有的是集合，响应结果有的是值有的是JSON。因此我们希望统一响应结果：使用一个Result对象来统一封装。一般的，Result包括这三个信息，响应码code：1代表成功，0代表失败；提示信息msg：比如“操作成功”“密码错误”；返回的数据data
+
+> **批注：** `Result` 及其字段是项目自行设计的约定，不是 Spring Boot 的强制规范。`code=1` 表示成功、`code=0` 表示失败，也只是其中一种约定。注意区分业务响应码 `Result.code` 和 HTTP 状态码；返回 `code=0` 不会自动将 HTTP 状态码变成 `500`。
+
+3.eg：public String Hello(){使用统一返回，改为：public Result Hello(){
+
+> **批注：** 返回类型改成 `Result` 后，方法体也需要实际返回 `Result` 对象。项目中还可以使用 `Result<T>` 泛型表示具体的数据类型。
+
+### 三：说说三层架构
+
+1.Controller层：控制层，接收前端发来的请求，并返回相应的统一响应结果
+
+2.Service层：业务逻辑层，负责用Controller传来的数据进行业务逻辑的处理
+
+3.Dao层：数据访问层（Data Access Object）(持久层)，负责操作增删查改。
+
+4.对于面向接口编程，比如Dao层，可能是处理某个文件的增删改查，也可能是处理数据库的增删改查，实现的方式有很多，因此需要创建一个接口，在创建具体的实现类
+
+> **批注：** 面向接口编程的重点是依赖能力约定，而不是绑定具体实现；接口有助于隔离和替换实现，但不代表每一个类都必须创建一个对应接口。
+
+5.三者的联动：在Service层，需要声明Dao的对象作为成员变量，new Dao接口的实现对象（这里涉及到了多态），获取处理之后的数据；类似的，在Controller层，需要声明Service的对象作为成员变量，new Service的对象然后获取经过Service层业务处理的数据。相互联系，层层递进。
+
+> **批注：** 这里可以作为“引入依赖注入之前”的写法。接口本身不能直接 `new`，只能实例化具体实现类。使用 Spring 后，通常声明接口类型的依赖，由容器注入实现对象，而不是在 Controller、Service 内部手动 `new` 实现类。
+
+### 四：说说分层解耦
+
+1.关于内聚耦合：我们期望高内聚（即某模块内部的功能越集中越好，比如Service层仅仅处理业务逻辑），低耦合（即各个模块之间的粘连越少越好）。
+
+2.现状：（在引入控制反转和依赖注入之前）Controller层要new Service的对象，如果Service对象改个名字，那Controller的代码也要更改，说明耦合度还是太高。
+
+> **批注：** 更关键的耦合是调用方绑定了具体实现类及其创建过程，而不仅是改名字。例如替换实现类或改变构造参数，可能都需要修改调用方。面向接口编程配合依赖注入可以降低这类耦合，但不能消除所有修改影响。
+
+3.控制反转：IOC（Inversion Of Control）指创建对象 的控制权由程序自身转移到外部 容器。这种 思想 叫做控制反转。
+
+4.依赖注入：DI（Dependency Injection）容器为程序提供运行时所依赖的资源（比如给Controller提供运行时所需要的Service对象），叫做依赖注入。
+
+> **批注：** **IoC 强调对象创建、管理等控制权的转移；DI 是实现 IoC 的一种方式，强调由外部提供对象所需的依赖。**
+
+5.Bean对象：IOC容器中负责创建，管理的对象，叫做bean。
+
+> **批注：** 核心是对象由 Spring IoC 容器管理；对象也可以在外部创建后注册到容器中，并非必须由容器亲自实例化。
+
+6.具体实现：对于控制反转，想要让Service和Dao交给IOC容器管理，需要在类上方加一个注解 @Component；对于依赖注入，需要在声明的成员变量上方加一个注解 @Autowired，表示自动注入这个对象。
+
+> **批注：** 这是组件扫描加字段注入的一种做法，并不是唯一方式。实际项目中常用 `@Service`、`@Repository` 标注具体实现类，并确保它们位于扫描范围内。依赖注入也可以通过构造方法完成；**只有一个构造方法时，可以省略其上的 `@Autowired`，通常推荐构造方法注入。** 此外，也可以通过 `@Bean` 方法等方式注册 Bean。
+
+7.Bean声明的细节：@Component有三个衍生注解：@Controller,@Service,@Repository，分别对应三层。Bean的名字为类名小写，想要修改直接在注解后加上（value="名字"）或者（"名字"）;
+
+> **批注：** 这里列出的是三个常用的衍生注解，不是全部。组件扫描时，Bean 默认名称通常是类名首字母小写，不是全部小写，例如 `EmployeeServiceImpl` → `employeeServiceImpl`。如果类名前两个字母都是大写，默认名称通常保持不变，例如 `URLService`。自定义名称示例：`@Service("employeeService")`。
+
+8.Bean的扫描的细节：通过注解@ComponentScan实现，事实上这个注解已经包含于启动类的@SpringBootApplication之中， 默认 扫描启动类的所在包及其子包，如果想要指定需要在启动类上方写@ComponentScan（"扫描包1","扫描包2"······），需要注意我们手动声明的包会覆盖默认，因此如果想要保留默认扫描包也需要再声明一下。
+
+//但是这种方法我们并不推荐， 规范上 我们只要把要被扫描的包放到启动类所在包或其子包即可。
+
+> **批注：** 多个扫描包需要使用数组语法：`@ComponentScan({"com.example.service", "com.example.dao"})`，不能写成多个独立字符串参数。也可以配置 `@SpringBootApplication(scanBasePackages = {"com.example"})`。直接在启动类上声明 `@ComponentScan` 时，会优先采用该扫描配置，不要假定默认业务包一定被额外保留。通常将业务类放在启动类所在包及其子包最简单。这里的组件扫描配置也不等同于 JPA 实体或 Spring Data Repository 等其他扫描配置。
+
+9.DI的细节：@Autowired是按照类型（这里的类型指的是接口）装配，例如在EmployeeService接口上写了@Autowired，就会在容器中寻找EmployeeService的实现类对象，然后注入。那么：
+如果有多个此类型（实现本接口）的对象，则会报错。 解决方法；
+
+- 使用@Primary在类上方（指本类定义那个地方而不是声明成员变量那个地方），意思是此类的对象（在同一个接口的多个实现类中）优先被注入。
+- 使用@Qualifer在成员变量上方，可以指定Bean对象，注意这里填的是Bean的名称
+- 不再使用@Autowired。@Resource也可以指定Bean对象，注意这里填的是Bean的名称。（本注解由JDK提供，本文所提其他注解基本由Spring框架提供）
+
+> **批注：** `@Autowired` 是写在字段、构造方法等注入点上，不是写在接口定义上。所需类型既可以是接口，也可以是具体类。例如：`@Autowired private EmployeeService employeeService;`。
+>
+> 存在多个同类型 Bean 时，并不一定报错；Spring 还可能通过 `@Primary`、`@Qualifier`、注入点名称等信息确定候选，无法唯一确定单个注入对象时才报错。`@Primary` 也可以标注在 `@Bean` 方法上。
+>
+> 正确拼写是 **`@Qualifier`**，不是 `@Qualifer`。它通常与 `@Autowired` 配合使用，例如 `@Qualifier("employeeServiceImpl")`；除了 Bean 名称，也支持自定义限定符语义。
+>
+> 在当前 Spring Boot 4 项目中，`@Resource` 的导入路径为 `jakarta.annotation.Resource`，属于 Jakarta Annotations 规范，不宜再记成“JDK 提供”。指定名称示例：`@Resource(name = "employeeServiceImpl")`。
+
+10.一道面试题：Q：@Autowired和@Resource的区别？
+
+A：第一，@Autowired按照类型匹配，而@Resource按照名称匹配；第二，@Autowired是Spring框架提供的，而@Resource是JDK提供的。
+
+> **批注：建议补充记忆下面这个准确版本。**
+>
+> - `@Autowired`：Spring 提供，主要按类型匹配，可结合 `@Qualifier` 限定候选，支持构造方法、字段和方法等注入点。
+> - `@Resource`：当前项目使用 Jakarta Annotations 提供的版本。默认先按字段名或属性名查找，找不到时再按类型匹配；显式指定 `name` 时按指定名称查找。可用于字段和 setter 等方法，不支持构造方法注入。
+> - 二者都需要在 Spring 管理的对象中，由相应的容器机制处理，才能完成这里所说的自动注入。
 
 ## 记录约定
 
