@@ -5,7 +5,7 @@
 不要求一开始记住所有框架名字。先抓住主线：**Maven 准备项目依赖，Spring Boot 帮助启动应用，Tomcat 接收请求，Spring MVC 安排调用我们写的方法。**
 
 > 仓库记录起始：2026-10-28（Maven 历史记录）；JavaWeb 正式记录起始：2026-10-29。
-> 最近更新：2026-11-21。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
+> 最近更新：2026-11-23。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
 
 > 示例说明：本文中的人名、学号均已改为示例化表述，仅用于解释代码与请求格式，不保证与本机数据库记录对应。运行验收只记录条数、字段及行为，不公开数据库名单原值。
 
@@ -25,6 +25,7 @@
 | 2026-11-11 | 学生查询与新增页面联调、JSON 请求体、业务提示 | [当天问答与流程图](#day-2026-11-11) · [查询页源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-query.html) · [新增页源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-create.html) · [验证范围](#tests-2026-11-11) |
 | 2026-11-12 | 新增页校验、HTTP 与 JSON 错误处理、接口文档和 Agent 协作 | [当天问答与流程图](#day-2026-11-12) · [新增页源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-create.html) · [验证范围](#tests-2026-11-12) · [AI Coding](#ai-coding-2026-11-12) |
 | 2026-11-21 | Spring Boot 复习：请求响应、统一响应、三层架构、IoC/DI | [修正批注版笔记](#day-2026-11-21) |
+| 2026-11-23 | 后续复习：模块与应用、数据库工具、MyBatis、测试、预编译 SQL | [追加笔记与排错](#day-2026-11-23) |
 
 10 月 28 日的 Maven 内容原先归档在 Database-Basics，已于 10 月 29 日复制到本仓库，保留原始来源和日期。今后 JavaWeb 及其 Maven 前置学习统一在这里接续记录；数据库仓库中的历史内容保留。
 
@@ -48,6 +49,8 @@
 - 本次未上传 IDEA 私有配置、target、依赖缓存或密码；只归档学习源码与必要构建文件。
 
 ## 当前进度
+
+- 2026-11-23：追加模块与应用、数据库连接、MyBatis、测试和预编译 SQL 笔记；删除测试日志确认 MySQL 认证失败，未宣称修复或删除成功。本次仅更新文档，未同步项目源码。[追加笔记](#day-2026-11-23)
 
 - 2026-11-21：归档 Spring Boot 复习笔记修正批注版，复习请求响应、统一响应、三层架构与 IoC/DI；仅更新笔记，未同步练习项目代码。[完整笔记](#day-2026-11-21)
 - 2026-11-12 学习记录：练习新增页必填提示、HTTP 错误、网络失败和响应解析失败，预习 Swagger 与 Agent 协作。[当天记录](#day-2026-11-12)
@@ -82,6 +85,8 @@
 目前借助 Spring Boot 和 MyBatis 搭建可运行的 Web 示例，学习横跨 Level 2 Web 基础与部分 Level 3 框架；并未完成整级课程。参见[全层级定位](#location-2026-11-07)。
 
 ## 知识点索引
+
+- [模块与应用、MyBatis 配置、测试、参数化 SQL 与注入防范（后续复习）](#day-2026-11-23)
 
 - [新增页必填校验、HTTP 与 JSON 错误处理](#day-2026-11-12) · [验证范围](#tests-2026-11-12) · [接口文档与 Agent 协作](#ai-coding-2026-11-12)
 
@@ -1630,6 +1635,184 @@ A：第一，@Autowired按照类型匹配，而@Resource按照名称匹配；第
 > - `@Autowired`：Spring 提供，主要按类型匹配，可结合 `@Qualifier` 限定候选，支持构造方法、字段和方法等注入点。
 > - `@Resource`：当前项目使用 Jakarta Annotations 提供的版本。默认先按字段名或属性名查找，找不到时再按类型匹配；显式指定 `name` 时按指定名称查找。可用于字段和 setter 等方法，不支持构造方法注入。
 > - 二者都需要在 Spring 管理的对象中，由相应的容器机制处理，才能完成这里所说的自动注入。
+
+<a id="day-2026-11-23"></a>
+
+## 2026-11-23：后续复习与 MyBatis 排错
+
+来源：桌面 `springboot复习.md` 的第五至第十部分，整理后续对话；日期依据本次提供的测试日志。保留旧笔记，仅调整标题层级以适配 README。代码为讲解示例，验证范围以本节明确记录为准。
+
+### 五：项目、模块和应用
+
+1. IDEA 项目（Project）是工作空间，可以包含多个模块（Module）。模块是代码组织单位，应用则是运行起来的程序，一个应用可以由多个模块组成。
+2. A 模块依赖 B 模块后，可以调用 B 中可访问的类和方法。同处一个 IDEA 窗口，不代表自动共享依赖、配置或对象，也不代表已经建立 Maven 父子多模块工程。
+3. 一个应用通常由启动模块负责启动，依赖模块提供功能，不必有启动类。依赖模块即使有 main 方法，不运行也不会自动启动另一个应用。
+4. 依赖模块需要什么框架依赖，取决于代码用了什么功能。普通实体类不需要 Spring Boot；使用 Spring 或 MyBatis 注解时，需要对应依赖。作为普通依赖的模块一般打包为普通 JAR，不需要 Spring Boot 可执行包打包。
+5. **IoC 容器由 Spring 提供，管理应用运行时的对象，不属于某个模块。** 多个模块中的类被正确扫描或注册后，可以由同一个容器管理。两个独立启动的应用通常各有自己的容器，不能直接跨应用 @Autowired 对方的对象。
+
+### 六：Spring、Spring Boot 和 MyBatis 的关系
+
+| 技术 | 主要作用 |
+|---|---|
+| Spring | 提供 IoC、依赖注入、事务管理等基础能力 |
+| Spring Boot | 基于 Spring，通过自动配置和起步依赖等简化应用搭建、配置与启动 |
+| MyBatis | 执行 SQL、绑定参数、将数据库查询结果映射为 Java 对象 |
+
+三者可以合作，但不是必须绑定使用。MyBatis 可以脱离 Spring 使用；Spring 也可以使用 JDBC、JPA 等其他数据库访问方案。
+
+典型调用链：Controller → Service → Mapper 代理 → JDBC → MySQL → Java 对象。MyBatis 创建 Mapper 代理，通过与 Spring 的集成将其注册为 Bean，供其他组件注入使用。
+
+### 七：IDEA 数据库工具与项目数据库连接
+
+1. **IDEA 数据库工具的连接与 Spring Boot 项目的连接相互独立。** 工具连上数据库，不代表项目已配置好；如果两者操作同一个库，修改的数据是共享的。
+2. IDEA 数据库工具中的 Default schema 表示连接的默认数据库，是特殊选项，不是名为 default 的真实数据库。
+3. 勾选 Schema 主要控制工具展示、检查哪些数据库，不会自动配置项目，也不等于把它设成当前 SQL 会话的默认库。
+4. 当前 IDEA 的 SQL 执行和表数据编辑功能提示需要 Ultimate 授权，可以改用 MySQL Workbench。这个限制不影响项目通过 JDBC、MyBatis 访问数据库。
+5. 新建 Spring Boot 项目或在连接窗口填入数据库名，都不会自动创建 MySQL 数据库。
+
+#### 员工表与初始数据
+
+以下是首次创建示例；插入只执行一次，避免重复数据。已建表时不要重复执行 CREATE TABLE。
+
+```sql
+USE springboot_review;
+
+CREATE TABLE employee (
+    id INT PRIMARY KEY AUTO_INCREMENT COMMENT '员工ID',
+    name VARCHAR(50) NOT NULL COMMENT '姓名',
+    age INT NOT NULL COMMENT '年龄'
+);
+
+INSERT INTO employee (name, age)
+VALUES ('小明', 18), ('小红', 19);
+
+SELECT * FROM employee;
+```
+
+报错 `No database selected`，表示当前会话没有默认数据库。先执行 USE，或使用完整表名：
+
+```sql
+SELECT * FROM springboot_review.employee;
+```
+
+Workbench 中，第一个黄色闪电执行选中的语句；没有选中内容时通常执行整个脚本。带光标的闪电执行当前语句。不要误执行旧的建表、插入或删除语句。
+
+#### SQL 大小写
+
+- SQL 关键字不区分大小写，通常大写以方便阅读。
+- MySQL 数据库名、表名是否区分大小写，与操作系统和 lower_case_table_names 配置有关，建议统一使用小写。
+- MySQL 列名不区分大小写；字符串比较是否区分大小写取决于排序规则，常见后缀 _ci 表示不区分、_cs 表示区分。
+
+### 八：MyBatis 配置与基本使用
+
+springboot_Mybatis 模块可以连接 springboot_review 数据库，模块名不必与数据库名相同。该模块已添加 MyBatis Starter 和 MySQL 驱动依赖。
+
+#### 1. properties 配置
+
+```properties
+## 应用名称，不是数据库名；非必填
+spring.application.name=springboot_Mybatis
+
+## 最后的 springboot_review 才是数据库名
+spring.datasource.url=jdbc:mysql://localhost:3306/springboot_review
+spring.datasource.username=root
+spring.datasource.password=${DB_PASSWORD}
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+## 本地调试：将 MyBatis 日志输出到控制台
+mybatis.configuration.log-impl=org.apache.ibatis.logging.stdout.StdOutImpl
+```
+
+DB 是 Database（数据库）的缩写；DB_PASSWORD 是自定义环境变量名，与配置引用一致即可。**普通启动类与 JUnit 测试的运行配置需要分别设置环境变量。** 在 Run → Edit Configurations → 对应配置 → Modify options → Environment variables 中设置，密码值不要额外加引号或空格，也不要上传真实密码。
+
+日志配置值末尾不要加句号。日志可能包含参数和业务数据，仅建议在本地学习、调试时使用。
+
+#### 2. Employee 与 Mapper
+
+Employee 对应表的数据，包含 Integer id、String name、Integer age。Integer 可以表示 null，例如新增前尚未生成的主键。实体类应提供适合框架使用的构造方法和 getter/setter。
+
+toString() 用于把对象转换成便于阅读的字符串；System.out.println(employee) 会调用它。它不负责转 JSON，也不负责存数据库。@Override 表示重写父类方法，并让编译器检查重写是否正确。
+
+```java
+package com.zhangyihang.springboot_mybatis.mapper;
+
+import com.zhangyihang.springboot_mybatis.pojo.Employee;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+import java.util.List;
+
+@Mapper
+public interface EmployeeMapper {
+
+    @Select("SELECT id, name, age FROM employee")
+    List<Employee> list();
+
+    @Select("SELECT id, name, age FROM employee WHERE id = #{id}")
+    Employee findById(@Param("id") Integer id);
+}
+```
+
+@Mapper 用于标识 Mapper 接口；@Select 指定查询 SQL，调用方法时才执行。返回员工数据应使用 List<Employee>，不是 List<EmployeeMapper>。当前使用注解 SQL，不必额外创建 Mapper XML。
+
+#### 3. IDE 标红与实际运行要区分
+
+`Unable to resolve table 'employee'` 表示 IDE 的 SQL 检查未能解析表。确认实际表存在后，可通过 Choose schema 关联 springboot_review，再刷新数据源元数据。右侧能看到表，不等于注解中的 SQL 已关联正确 Schema。
+
+这种检查提示通常不阻止 Java 编译；运行时查询哪个库，仍由项目数据源配置决定。IDE 数据编辑器受授权限制时，其空白页面或 0 rows 提示不能用于判断表是否有数据。
+
+### 九：测试与启动类的区别
+
+1. 普通启动类通过 main 启动应用；Web 应用通常持续监听端口、等待请求。非 Web 应用不一定持续运行。
+2. @Test 是 JUnit 注解，标记测试方法；测试由测试框架运行，完成后通常退出，不需要自己写 main。
+3. 测试一般分为：准备数据 → 调用被测代码 → 断言结果。**只打印结果不等于验证结果正确，断言才负责自动判断对错。**
+4. 普通单元测试通常只测试方法或类，不启动 Spring，也不访问真实数据库。
+5. @SpringBootTest 会加载 Spring 应用上下文，可以注入 Mapper，不用先手动运行启动类；默认不启动监听真实端口的 Web 服务器。
+6. 访问真实数据库的 Mapper 测试更接近集成测试，因为它验证 Spring、MyBatis 和数据库的配合。
+7. **删除测试会真实修改数据库。排错时优先用查询验证连接，避免反复执行 delete。**
+
+#### 本次排错记录
+
+| 现象 | 结论与处理 |
+|---|---|
+| 8080 已被占用 | 停止占用端口的程序，或配置 server.port 使用其他端口 |
+| Lombok requires enabled annotation processing | 检查对应模块的 Annotation Processors 配置，启用注解处理；此提示不一定是测试失败根因 |
+| Access denied for user 'root'@'localhost' (using password: YES) | MySQL 认证失败，检查测试配置中的密码及连接地址；YES 仅表示提供了密码，不表示密码正确 |
+| Mockito 自附加、动态 Java agent 警告 | 不是本次数据库认证失败的原因 |
+
+日志显示 Spring 测试上下文已启动，但执行删除时获取数据库连接失败；不能将“Started”当成查询或删除已成功。失败发生于获取连接阶段，不应误判为 SQL 语法或 IDE 红线问题。
+
+### 十：预编译 SQL、参数绑定与 SQL 注入
+
+日志示例：
+
+```text
+==>  Preparing: delete from employee where id=?
+==> Parameters: 2(Integer)
+<==    Updates: 1
+```
+
+表示准备 SQL、绑定整数参数 2，执行后影响 1 行。这是解释用的成功日志示例，不代表前面的失败删除测试已修复或再次验收成功。
+
+**这里体现的是参数化思想：将固定的 SQL 结构与变化的数据分离。可以类比方法传参，但不属于函数式编程的特有体现。** 函数式编程还关注纯函数、不可变数据和函数组合等，不能仅凭“传参数”判断。
+
+#### 1. 性能
+
+数据库通常会解析、检查、优化 SQL，生成执行计划，不宜简单理解为编译成机器指令。预编译语句重复执行时，可能复用部分处理结果、减少重复解析开销；实际效果取决于数据库、驱动配置及语句生命周期等。
+
+不能绝对地说“写具体值就完全不能复用”，也不能说“用占位符就一定只编译一次、一定更快”。日志中的 Preparing 本身也不能证明服务端预编译已启用。
+
+#### 2. 防止 SQL 注入
+
+拼接不可信输入可能改变原 SQL 结构。**预编译参数绑定将 SQL 结构和数据分开处理，参数作为数据，不会重新解释为 SQL 代码。** 不是简单地说参数“被占位符限定”。
+
+例如查询姓名时，即使参数是 `' OR 1=1 -- `，通过参数绑定传入也只会被当成完整的姓名值，不会变成新的查询条件。
+
+- MyBatis 的 #{id} 通常转换为 JDBC 占位符并绑定参数。
+- ${id} 是字符串替换，直接拼接不可信输入有注入风险。
+- 占位符用于数据值，不能直接绑定表名、列名等 SQL 结构；动态结构需要白名单等安全控制。
+
+> 归档说明：本次追加的是对话中的概念解释、示例和排错结论，不表示所有示例均已实际运行验证，也未更改项目源码。
 
 ## 记录约定
 
