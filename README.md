@@ -5,7 +5,7 @@
 不要求一开始记住所有框架名字。先抓住主线：**Maven 准备项目依赖，Spring Boot 帮助启动应用，Tomcat 接收请求，Spring MVC 安排调用我们写的方法。**
 
 > 仓库记录起始：2026-10-28（Maven 历史记录）；JavaWeb 正式记录起始：2026-10-29。
-> 最近更新：2026-11-23。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
+> 最近更新：2026-11-24。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
 
 > 示例说明：本文中的人名、学号均已改为示例化表述，仅用于解释代码与请求格式，不保证与本机数据库记录对应。运行验收只记录条数、字段及行为，不公开数据库名单原值。
 
@@ -26,6 +26,7 @@
 | 2026-11-12 | 新增页校验、HTTP 与 JSON 错误处理、接口文档和 Agent 协作 | [当天问答与流程图](#day-2026-11-12) · [新增页源码](SpringBoot_javaWeb_quickstart/src/main/resources/static/student-create.html) · [验证范围](#tests-2026-11-12) · [AI Coding](#ai-coding-2026-11-12) |
 | 2026-11-21 | Spring Boot 复习：请求响应、统一响应、三层架构、IoC/DI | [修正批注版笔记](#day-2026-11-21) |
 | 2026-11-23 | 后续复习：模块与应用、数据库工具、MyBatis、测试、预编译 SQL | [追加笔记与排错](#day-2026-11-23) |
+| 2026-11-24 | MyBatis 动态 SQL 与手写笔记批注 | [补录与批注](#day-2026-11-24) |
 
 10 月 28 日的 Maven 内容原先归档在 Database-Basics，已于 10 月 29 日复制到本仓库，保留原始来源和日期。今后 JavaWeb 及其 Maven 前置学习统一在这里接续记录；数据库仓库中的历史内容保留。
 
@@ -49,6 +50,8 @@
 - 本次未上传 IDEA 私有配置、target、依赖缓存或密码；只归档学习源码与必要构建文件。
 
 ## 当前进度
+
+- 2026-11-24：归档手写笔记批注及 MyBatis XML 映射、动态 SQL 讲解；姓名与年龄动态查询修改后未验收，动态更新仅作示例。[本日笔记](#day-2026-11-24)
 
 - 2026-11-23：追加模块与应用、数据库连接、MyBatis、测试和预编译 SQL 笔记；删除测试日志确认 MySQL 认证失败，未宣称修复或删除成功。本次仅更新文档，未同步项目源码。[追加笔记](#day-2026-11-23)
 
@@ -77,14 +80,16 @@
 | Servlet 核心技术 | 概述、生命周期、配置、请求响应、乱码、ServletContext | 已理解调用关系和生命周期；当前借助 Spring MVC 实践请求参数，其余未完成 |
 | 分层与 Spring 基础 | Controller/Service/DAO、接口解耦、IOC、构造方法 DI | 2026-11-04 已完成首轮指导实践；多实现选择等待巩固 |
 | 学生查询与新增实践 | 路径参数、JSON、校验、查重、边界测试 | 11 月 6 日 JDBC 实践，11 月 7 日迁移到 MyBatis；错误响应待完善 |
-| Level 3 部分框架入门 | MyBatis 注解、参数与结果映射、Boot 数据访问、HikariCP | 当前重点：三个操作已迁移并进行限定场景验证；不代表 Level 3 整体完成 |
-| 会话状态管理 | Cookie、Session、登录状态保持 | 待正式学习 |
+| Level 3 部分框架入门 | MyBatis 注解、XML 映射、动态 SQL、参数与结果映射、Boot 数据访问、HikariCP | 三个学生操作已迁移并进行限定场景验证；员工示例的 XML 映射与动态 SQL 已讲解，动态条件修改后未验证，不代表 Level 3 整体完成 |
+| 会话状态管理 | Cookie、Session、Token、登录状态保持 | 仅初步介绍 Session 与 Token，未实施 |
 | 文件上传与下载 | 上传与下载实操 | 待学习 |
 | 前后端分离技术 | MVC、JSON、HTTP 客户端、跨域 | 已完成同源查询、新增页面联调及新增页错误处理。下一步练表单提交，再练 Axios、CORS 和分开部署。 |
 
 目前借助 Spring Boot 和 MyBatis 搭建可运行的 Web 示例，学习横跨 Level 2 Web 基础与部分 Level 3 框架；并未完成整级课程。参见[全层级定位](#location-2026-11-07)。
 
 ## 知识点索引
+
+- [MyBatis XML 映射、动态 SQL、手写笔记批注与登录认证初步介绍](#day-2026-11-24)
 
 - [模块与应用、MyBatis 配置、测试、参数化 SQL 与注入防范（后续复习）](#day-2026-11-23)
 
@@ -1755,6 +1760,8 @@ public interface EmployeeMapper {
 
 @Mapper 用于标识 Mapper 接口；@Select 指定查询 SQL，调用方法时才执行。返回员工数据应使用 List<Employee>，不是 List<EmployeeMapper>。当前使用注解 SQL，不必额外创建 Mapper XML。
 
+> 批注：该段是员工 Mapper 的早期示例；后续 `list` 改用 XML 映射，参见 [2026-11-24 补录](#day-2026-11-24)。
+
 #### 3. IDE 标红与实际运行要区分
 
 `Unable to resolve table 'employee'` 表示 IDE 的 SQL 检查未能解析表。确认实际表存在后，可通过 Choose schema 关联 springboot_review，再刷新数据源元数据。右侧能看到表，不等于注解中的 SQL 已关联正确 Schema。
@@ -1813,6 +1820,262 @@ public interface EmployeeMapper {
 - 占位符用于数据值，不能直接绑定表名、列名等 SQL 结构；动态结构需要白名单等安全控制。
 
 > 归档说明：本次追加的是对话中的概念解释、示例和排错结论，不表示所有示例均已实际运行验证，也未更改项目源码。
+
+<a id="day-2026-11-24"></a>
+## 2026-11-24：MyBatis 动态 SQL 与手写笔记批注
+
+> 来源：桌面 `springboot复习.md` 的第十一、十二部分；本次归档日期：2026-11-24。
+
+### 十一：手写笔记补录与批注（原文第五至第七部分）
+
+> 手写原文来源：桌面 `springboot复习.txt`。保留上方历史内容及原文编号，以下按原文分段收录；用行内代码保护原文中的 XML 标签，代码示例保留围栏。纠正、补充写在原文附近，不修改 `.txt`。以下示例不代表已运行验收。
+
+#### 原文五：说说Mybatis入门
+
+五：说说Mybatis入门
+
+1.使用前置准备：创建springboot工程（当然MyBatis可以独立运作，springboot只是做一个整合），引入的依赖选择MyBatis和MySQL驱动（这些依赖也可以在pom.xml文件中自己添加）。
+
+提前准备好一个数据库，准备好一个类对应数据库的字段信息比如Employee类。
+
+配置文件，在application.properties写好配置：
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/springboot_review
+spring.datasource.username=root
+spring.datasource.password=${DB_PASSWORD}
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+```
+
+2.是什么：MyBatis是一个持久层框架，帮助执行sql，绑定参数，将查询结果映射成Java对象。
+
+3.具体实现：首先创建mapper接口（例如EmployeeMapper），将注解写在接口的声明上方`@Mapper`，表示MyBatis将自动创建此接口的 实现类 对象（！注意这里我们不用再定义这个接口的实现类，框架会自动创建实现类和对象）。
+
+接着，在一个查询方法上方标注`@Select（"SELECT * FROM employee"）`。 `@Select` 是 MyBatis 提供的注解，用来指定 Mapper 方法执行的查询 SQL。这个方面有个小细节，由于SQL语句是个字符串IDEA在运行之前是检查不出来错误的，因此为解决此问题我们可以右击sql语句，选择Show Context Actions·······
+
+> 批注：在 Spring Boot 项目中，一般引入兼容版本的 MyBatis Starter 和 MySQL 驱动，并通过 `@Mapper` 或 `@MapperScan` 扫描接口。MyBatis 创建的是实现该接口的动态代理对象，不是生成一个需要手写或维护的实现类源文件。
+>
+> IDEA 可以通过 SQL 语言注入、关联数据源等做部分静态检查，不能说运行前完全检查不出错误；但 Java 编译器不会验证字符串中的 SQL 是否正确。工具检查也不能替代真实运行验证。
+
+#### 原文六：说说JDBC
+
+六：说说JDBC：
+
+1.是什么：JDBC是sun公司提供的一套可以操作所有关系型数据库的规范即接口（API），具体的实现（驱动jar包）由各大数据库厂商提供。
+
+2.JDBC是非常原始的执行SQL语句的方法，而MyBatis对此进行了优化，因此我们使用MyBatis。
+
+3.数据库连接池：一个容器，用来管理数据库连接。允许应用程序重复使用空闲的数据库连接，而不是重新建立一个新连接。
+
+springboot默认使用追光者连接池。如果想更换德鲁伊连接池（阿里巴巴出品），第一步引入德鲁伊连接池的依赖，第二步写配置文件（这一步不用了因为之前写过）
+
+4.lombok：一个适用的Java类库，通过注解的形式自动生成对应的get/set方法，equals，hashcode，tostring并可以自动化生成日志，简化Java开发，提升效率。
+
+- `@Data`，等于getset方法，tostring，equalshashcode方法
+- `@NoArgsConstructor`,无参构造
+- `@AllArgsConstructor`,全参构造
+
+注意使用时候需要引入lombok的依赖，然后刷新Maven。
+
+> 批注（JDBC）：JDBC 是 Java 平台的标准数据库访问 API，历史上由 Sun 推出。实际连接某个数据库仍需要兼容的驱动；不是任意数据库都能直接连接。MyBatis 底层仍使用 JDBC，主要简化参数绑定、结果映射和重复代码，不代表性能一定比直接使用 JDBC 更高。
+>
+> 批注（连接池）：常见名称是 HikariCP（常称“光追”连接池）和 Druid（德鲁伊）。在常见 JDBC Starter 配置下，Spring Boot 默认优先选择 HikariCP，前提是它在类路径中且没有其他显式配置。切换 Druid 时需要选择兼容的依赖，并确认实际 DataSource 类型；已有连接参数可能复用，但不能保证“只加依赖、配置完全不用改”。
+>
+> 批注（Lombok）：Lombok 在编译期通过注解处理生成代码。`@Data` 包含 getter、非 final 字段的 setter、`toString`、`equals/hashCode` 以及必需参数构造器，不是全参构造器。`@Slf4j` 等注解生成日志字段，不会自动替你记录业务日志；仍需调用 `log.info(...)` 等方法。除了引入依赖，还应确保注解处理已启用。
+
+#### 原文七：细说MyBatis
+
+##### 1—3：测试、日志与预编译 SQL
+
+七：细说MyBatis：
+
+1.对于在测试类测试，我们也需要配置数据库的环境变量。声明成员变量，然后在变量前进行依赖注入。对于测试的方法，上需要加一个`@Test`
+
+2.MyBatis日志配置：在properties中写入
+
+```properties
+# 将 MyBatis 执行的 SQL、参数和结果等日志输出到控制台
+mybatis.configuration.log-impl=org.apache.ibatis.logging.stdout.StdOutImpl.
+```
+
+实际运行时在控制台看到类似：“`==>  Preparing: delete from employee where id=?==> Parameters: 2(Integer)<==    Updates: 1`”
+
+3.下面详细讲讲预编译sql（即第二条中的显示句）：在这里并不是直接写`where id=某个值`，而是选择用问号作为一个占位符，再把参数传进来。
+
+为什么：首先是高性能，首先SQL语句也是一种语言，Java传给数据库时候sql语句要进行编译，最后成为更底层的低级的命令，如果直接写id等于某个具体的值，那么编译的结果不可复用。因此这里有一种参数化思想：将固定的 SQL 结构与变化的数据分离。可以类比方法传参，但不属于函数式编程的特有体现。
+
+其次是防止 SQL 注入。直接拼接不可信输入，可能让输入内容改变原有 SQL 结构。使用预编译参数绑定时，输入仅作为数据处理，不会作为 SQL 代码执行，因此能够防范这类注入攻击。
+
+> 批注（测试）：只有 `@Test` 不会自动加载 Spring 容器。这里使用 `@SpringBootTest` 才能加载应用上下文并注入 Mapper；当数据源配置引用 `${DB_PASSWORD}` 时，应确保测试进程能读取该变量。不要随意运行整个测试类，其中的删除方法会真实修改数据库。
+>
+> 批注（日志）：配置值末尾的句号必须去掉，正确写法如下。上面的成功日志仅作说明，不代表本次实际执行了删除。
+
+```properties
+mybatis.configuration.log-impl=org.apache.ibatis.logging.stdout.StdOutImpl
+```
+
+> 批注（预编译）：数据库会解析、检查、优化 SQL 并执行，不能简单理解为编译成低级命令。参数化有利于复用，但具体效果取决于数据库、驱动与语句生命周期；直接写具体值也不一定完全不能复用，使用占位符也不保证一定更快。防注入关键是分离 SQL 结构与参数数据：使用 `#{}` 参数绑定，不要用 `${}` 拼接不可信输入。详见第十部分。
+
+##### 4：插入与主键回填
+
+4.插入操作，默认不返回主键。如果想要返回主键，需要添加注解`@Options`。具体为 `@Options(useGeneratedKeys = true, keyProperty = "id")`，注意这里的Id是事先封装在类里面的，如果找不到这个属性就会报错。
+
+> 批注：更准确地说，这里配置的是将数据库生成的主键回填到传入对象的 `id` 属性，不是让 Mapper 方法直接返回主键。插入方法返回 `int` 时通常表示受影响行数；主键在调用后通过 `employee.getId()` 获取。前提是数据库、驱动支持生成键，且对象有对应的可写属性。`keyProperty` 写 Java 属性名，注意 `id` 的大小写；也可以通过 XML 的 `useGeneratedKeys`、`keyProperty` 或其他生成键策略实现，不是只能用 `@Options`。
+
+##### 5：查询结果映射
+
+5.查询操作数据返回的自动封装：如果实体类的属性名和数据库的字段名一致则MyBatis会实现自动封装，若不一致则无法封装，无法封装的实体类的属性为null。
+
+第一种解决方法是给数据库的字段起别名和实体类属性名字一致（在查询语句中）。
+
+第二种解决方法是通过注解`@Results`指定，内部是`@Result`，即 `@Result`：SQL 查询结果 → Java 对象属性。格式为：
+
+```java
+@Results({
+    @Result(column = "数据库列名1", property = "Java属性名1"),
+    @Result(column = "数据库列名2", property = "Java属性名2")
+})
+```
+
+> 批注：自动映射主要依据结果集列名或列标签与 Java 属性名，并受映射配置影响；不能一概说“名字不一致就必定无法映射”。未映射的属性通常保留默认值：引用类型可能是 `null`，基本类型如 `int` 则可能是 `0`。除了别名和 `@Results`，还可使用 XML 的 `<resultMap>`。
+>
+> 对于 `employee_name` → `employeeName` 这样的下划线转驼峰，可以开启以下配置；它不负责任意不同名称的转换。
+
+```properties
+mybatis.configuration.map-underscore-to-camel-case=true
+```
+
+##### 6—7：XML 映射与注解方式
+
+6.基于XML配置文件的方式来配置sql语句：我们也叫这份配置文件为XML映射文件。几点规范：
+
+（1）映射文件的名称必须与对应mapper接口的名称一致。并将配置文件放在和mapper的相同包下。简单解释：源代码在Java包下，下一级是我们自定义的包。而配置文件在resource包下，和Java不是同一部分，我们需要做的就是在resource下创建和我们自定义的包相同名称的包，这就是所说的“并将配置文件放在和mapper的相同包下”。
+
+实际操作：创建配置文件需要先创建一个目录：new 的选项中并没有package，我们选择directory.命名时候不能用点来分割，应用/来分割。
+
+简单来说就是“同包同名”！
+
+（2）XML映射文件的namespace属性需要和mapper接口的全类名保持一致。
+
+（3）XML映射文件中写的sql语句的Id必须和mapper接口中的方法名保持一致。并保持返回类型一致。
+
+eg：`<select id="list" resultType="com.zhangyihang.springboot_mybatis.pojo.Employee">`
+
+（4）一个插件:MybatisX
+
+7.注解式开发orXML映射文件？使用注解的sql语句可以让代码更加简洁，但对于较为复杂的sql语句，使用注解会更加混乱，此时宜使用配置文件，将sql写入配置文件中。
+
+> 批注（目录）：标准资源目录名是 `src/main/resources`，不是 `resource`。与接口“同包同名”是便于自动发现 XML 的常用方案，并非唯一合法位置；也可以将 XML 放到其他资源目录，再用 `mybatis.mapper-locations` 指定位置。创建目录时用 `/` 分层；点号只是普通目录名字符，不会自动变成包层级。
+>
+> 当前项目采用的路径为：
+> - 接口：`src/main/java/com/zhangyihang/springboot_mybatis/mapper/EmployeeMapper.java`
+> - XML：`src/main/resources/com/zhangyihang/springboot_mybatis/mapper/EmployeeMapper.xml`
+>
+> 批注（映射）：对于接口调用方式，`namespace` 对应接口全类名，语句的 `id` 对应方法名。`resultType` 写每行结果的类型，不是集合类型；例如方法返回 `List<Employee>` 时，XML 写 `Employee` 的全类名或已配置别名，而不是 `List`。也可以改用 `resultMap`。
+>
+> MyBatisX 是开发辅助插件，不是运行 MyBatis 的必要条件。同一个方法应选择一份 SQL 映射，不要同时配置 `@Select` 和同 `id` 的 XML 查询。
+
+##### 8：动态 SQL
+
+8.动态SQL：程序运行中可以变化的sql语句。例如在查询中，写死的代码只能查询全部，如果只是想查某一条数据项，就需要重新写sql语句。此时使用动态SQL，用if来操作sql语句的拼接。几个标签：
+
+- `<where>`：有条件才加 WHERE，去掉开头多余的 AND/OR。
+- `<set>`：有更新项才加 SET，去掉末尾多余的逗号。
+- `<if>`：判断条件，决定是否拼接其中的 SQL。
+- `<foreach>` 用于遍历集合并拼接 SQL，常用于 IN 查询、批量插入或删除。
+- `<sql>`：定义可复用的 SQL 片段。
+- `<include>`：引用该片段，减少重复代码。
+
+> 批注：固定 SQL 也能使用 `WHERE id = #{id}` 按参数查询，并不是只能查询全部。动态 SQL 的关键是根据参数等条件改变 SQL 的结构，例如决定是否加入姓名或年龄条件。
+>
+> `<where>` 没有内容就不生成 WHERE；更新、删除时如果条件全部为空，可能影响整张表。`<set>` 没有内容就不生成 SET，此时更新语句通常不合法，应在调用前拦截。`<foreach>` 使用的集合也应先检查，避免空集合造成非法 SQL 或意外取消筛选。批量删除通常是拼出一条 `DELETE ... WHERE id IN (...)`，不是必须循环执行多条 DELETE。
+
+### 十二：本次对话补充（参数、动态更新与登录认证）
+
+#### 1. @Param 与 SQL 的选择
+
+`@Param` 给 Mapper 方法参数命名，XML 使用的是注解指定的名称：
+
+```java
+List<Employee> list(@Param("name") String name,
+                    @Param("age") Integer age);
+```
+
+调用哪个 Mapper 方法，就按接口全类名和方法名找到对应映射；实体对象只提供参数数据，不决定执行哪个 SQL。
+
+```text
+employeeMapper.updata2(employee)
+→ EmployeeMapper 对应 namespace
+→ id="updata2" 的语句
+→ 读取 employee 属性，判断 <if> 并绑定参数
+```
+
+#### 2. 动态更新员工示例
+
+接口方法：
+
+```java
+int updata2(Employee employee);
+```
+
+XML 片段（放在对应 `<mapper>` 内）：
+
+```xml
+<update id="updata2">
+    UPDATE employee
+    <set>
+        <if test="name != null">
+            name = #{name},
+        </if>
+        <if test="age != null">
+            age = #{age},
+        </if>
+    </set>
+    WHERE id = #{id}
+</update>
+```
+
+> 批注：这里单个实体参数未加 `@Param`，因此直接使用属性名；若写为 `@Param("employee") Employee employee`，则应相应改成 `employee.name`、`#{employee.age}` 等。`updata2` 是沿用提问中的拼写，也可统一改成 `update2`，但接口方法名和 XML 的 `id` 必须一致。
+
+```java
+Employee employee = new Employee();
+employee.setId(1); // 仅为示例，实际执行前确认目标员工
+employee.setAge(20);
+// 以下调用会真实更新数据库，不要盲目运行
+int rows = employeeMapper.updata2(employee);
+```
+
+生成的 SQL 结构为 `UPDATE employee SET age = ? WHERE id = ?`，参数是 `20` 和 `1`。
+
+- 调用前检查 `id` 非空，且至少有一个可更新字段。
+- `age` 使用 `Integer`，以 `null` 表示“不更新”。
+- 此方案不能用 `null` 把数据库字段清空为 SQL NULL；空姓名字符串仍会参与更新。
+- `rows` 是数据库报告的受影响行数，不是员工 ID；不能无条件保证一定是 1。
+
+#### 3. 三层结构与依赖回顾
+
+```text
+前端 → Controller → Service → Mapper → JDBC → MySQL
+结果反向返回
+```
+
+Controller 接收请求并返回响应，Service 处理业务，Mapper 负责数据库操作。Web 依赖支持 HTTP 请求处理，MyBatis 简化 SQL 执行与映射，MySQL 驱动负责连接数据库，Lombok 简化样板代码。
+
+#### 4. 登录认证
+
+```text
+提交账号密码 → 后端校验 → 建立登录凭证
+→ 后续请求携带凭证 → 后端验证 → 放行或拒绝
+```
+
+- Session：服务端保存登录状态，浏览器通常通过 Cookie 携带 Session ID。
+- Token：客户端后续请求携带令牌，服务端验证；JWT 是一种常见令牌格式。
+- 密码应使用安全的密码哈希算法（如 BCrypt）存储和校验，不应明文保存。
+- 认证判断“你是谁”，授权判断“你能做什么”；登录成功不代表拥有全部权限。
+
+#### 5. 实施与验证边界
+
+依据交接记录：原无条件查询曾运行成功，之后 XML 已加入姓名、年龄动态条件，但没有修改后的运行验收证据。本节动态更新、主键回填、结果映射和登录认证均为讲解内容，不据此宣称已在项目实现。本次仅归档学习笔记，未同步练习项目源码、运行数据库操作或完成新的功能验收。
 
 ## 记录约定
 
