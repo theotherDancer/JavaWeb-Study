@@ -5,7 +5,7 @@
 不要求一开始记住所有框架名字。先抓住主线：**Maven 准备项目依赖，Spring Boot 帮助启动应用，Tomcat 接收请求，Spring MVC 安排调用我们写的方法。**
 
 > 仓库记录起始：2026-10-28（Maven 历史记录）；JavaWeb 正式记录起始：2026-10-29。
-> 最近更新：2026-11-26。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
+> 最近更新：2026-11-27。后续按实际学习日期持续追加；日期表示学习时间，补录或复制日期另行标明。
 
 > 示例说明：本文中的人名、学号均已改为示例化表述，仅用于解释代码与请求格式，不保证与本机数据库记录对应。运行验收只记录条数、字段及行为，不公开数据库名单原值。
 
@@ -29,6 +29,7 @@
 | 2026-11-24 | MyBatis 动态 SQL 与手写笔记批注 | [补录与批注](#day-2026-11-24) |
 | 2026-11-25 | MySQL 数据库基础与手写笔记批注 | [本日笔记](#day-2026-11-25) |
 | 2026-11-26 | 内存用户查询、三层架构、依赖注入与 HTTP 响应 | [当天问答总结](#day-2026-11-26) · [查询流程图](#flow-2026-11-26) · [验证边界](#tests-2026-11-26) |
+| 2026-11-27 | Basic Quiz 手写作业：新增用户、教育经历、DTO 校验、统一异常与默认数据 | [问答与踩坑总结](#day-2026-11-27) · [新增流程图](#flow-2026-11-27) · [验收边界](#tests-2026-11-27) |
 
 10 月 28 日的 Maven 内容原先归档在 Database-Basics，已于 10 月 29 日复制到本仓库，保留原始来源和日期。今后 JavaWeb 及其 Maven 前置学习统一在这里接续记录；数据库仓库中的历史内容保留。
 
@@ -52,6 +53,8 @@
 - 本次未上传 IDEA 私有配置、target、依赖缓存或密码；只归档学习源码与必要构建文件。
 
 ## 当前进度
+
+- 2026-11-27：Basic Quiz 四个接口的主要业务代码已手写接通；补齐默认用户及四条教育经历、DTO 校验和常见异常响应，并将教育经历 DTO 转实体统一移至 Service。仅经源码检查，未运行构建、启动、HTTP 验收或单元测试；两个 Service 方法单测和 Gradle 启动要求仍待完成。本次仅上传学习总结，不同步作业源码。[问答与踩坑](#day-2026-11-27)
 
 - 2026-11-26：独立手写 Basic Quiz 的个人基本信息查询模块，源码检查确认 Controller → Service → 内存 Mapper 的调用已连接；默认用户信息、字段拼写与接口运行验收尚待完善。本次只归档总结，未同步作业源码，未运行构建、HTTP 请求或单元测试。[当天记录](#day-2026-11-26)
 
@@ -94,6 +97,8 @@
 目前借助 Spring Boot 和 MyBatis 搭建可运行的 Web 示例，学习横跨 Level 2 Web 基础与部分 Level 3 框架；并未完成整级课程。参见[全层级定位](#location-2026-11-07)。
 
 ## 知识点索引
+
+- [Basic Quiz：DTO 校验、三类 400 异常、Map/List 返回值、默认数据与三层职责](#day-2026-11-27) · [新增流程图](#flow-2026-11-27) · [验收边界](#tests-2026-11-27)
 
 - [内存用户查询、对象与集合、三层职责、Spring 注入与 ResponseEntity](#day-2026-11-26) · [查询流程图](#flow-2026-11-26) · [验证边界](#tests-2026-11-26)
 
@@ -2328,6 +2333,222 @@ flowchart TD
 **下次接续**
 
 先完善并核对默认数据、字段名称和错误响应内容，再启动验证 `/users/1` 与不存在用户的响应；随后按题目要求继续其他 API 与测试。
+
+<a id="day-2026-11-27"></a>
+## 2026-11-27：Basic Quiz 手写作业，把新增、校验、异常与内存数据串起来
+
+> 来源：本轮手写作业问答、需求原文、学习者提供的 default.json 内容与本机源码检查。接续 11 月 26 日的查询练习；部分前序进度来自交接记录，不将所有代码都认定为本日首次编写。学习者自己修改业务代码，助手读取最新文件、解释问题并按追问提供局部示例。本次只归档 README，不上传作业源码。
+
+### 一、作业目标与已写出的接口
+
+应用使用 Spring Boot，监听默认 8080、无需 HTTPS；数据仅保存在内存中，不使用数据库或本地文件保存应用数据。接口字段名、类型、校验规则和实际 HTTP 状态都属于自动化评分细节。
+
+| 接口 | 主要逻辑 | 题目要求的正常响应 |
+|---|---|---|
+| GET /users/{id} | 按 ID 查询用户，不存在时 404 + ApiError | 200 + User |
+| GET /users/{id}/educations | 先判断用户存在，再查有序教育经历；存在但无经历时返回空列表 | 200 + Education 数组 |
+| POST /users | 校验 DTO、转成 User、分配递增 ID 并保存 | 201 + 含系统 ID 的 User |
+| POST /users/{id}/educations | 校验 DTO、判断用户存在、转成 Education 并保存 | 201，无响应体 |
+
+默认用户 ID 为 1，新增从 2 开始递增，姓名可以重复；不额外按姓名查重。成功响应直接遵守题目结构，不为了“统一”而额外套 Result。
+
+### 二、三层架构：每层到底负责什么？
+
+| 层 | 本次实际职责 | 不应该顺手混进去的工作 |
+|---|---|---|
+| Controller | 接收路径参数和 JSON，触发校验，调用 Service，组织 HTTP 响应 | 直接遍历或修改内存集合 |
+| Service | 判断用户是否存在，DTO 转实体，安排查询与保存 | 操作 HTTP 状态码 |
+| Mapper | 保存 List/Map、按 ID 查询、分配用户 ID、初始化默认数据 | 读取 HTTP 请求或依赖请求 DTO |
+
+- Controller 依赖 Service 接口，Spring 注入实现类；Service 注入内存 Mapper，默认共享单例 Bean 中的数据。
+- Mapper 在这里是自己编写的普通内存数据访问类，使用 `@Repository`，没有 SQL 或 MyBatis 代理。改名 Repository 更贴近仓库职责，但不是功能必修项。
+- DTO、Entity、Result 是传递数据的对象，不是三层之外又增加三层；GlobalException 统一处理异常响应。
+- 最初 User 的转换在 Service、Education 的转换在 Mapper。后来将 Education 的 `new Education()` 和 `BeanUtils.copyProperties(dto, entity)` 移到 Service，Mapper 参数由 EducationDto 改为 Education。
+- 搬完转换代码后曾仍调用 `CreateEducation(id, educationDto)`，导致参数类型不匹配；应传已经转换好的 `education`。Controller 和 Service 接口仍接收 DTO，不需要跟着全部改成实体。
+- 统一转换位置主要为了职责一致、减少 Mapper 对请求结构的依赖；原写法不是“绝对不能运行”，不必把结构建议误说成功能错误。
+
+### 三、新增用户：复制属性之后，ID 怎么回来？
+
+```text
+JSON → UserDto → Service 创建 User 并复制属性
+     → Mapper 分配 ID、加入 List → 返回该 User → HTTP 201
+```
+
+Service 创建的 User 与传给 Mapper 的 User 是同一个对象。Mapper 给它设置 ID 后，Service 原变量也能读到这个 ID；不是必须重新接收 Mapper 返回值才能得到修改。
+
+`AtomicLong(2)` 配合 `getAndIncrement()` 分配新增 ID；它保证该计数操作的原子性，不代表 ArrayList、HashMap 或整个接口已经线程安全。当前没有并发验证。
+
+### 四、DTO 校验：year 非空为什么要用 Long？
+
+| DTO 字段 | 本次采用的规则 |
+|---|---|
+| UserDto.name | @NotNull、@Size(min=1,max=128) |
+| UserDto.age | long + @Min(17)，未传默认 0，会被拒绝 |
+| UserDto.avatar | @NotNull、@Size(min=8,max=512) |
+| UserDto.description | @Size(max=1024)，允许 null 和空字符串 |
+| EducationDto.year | Long + @NotNull |
+| EducationDto.title | @NotNull、@Size(min=1,max=256) |
+| EducationDto.description | @NotNull、@Size(min=1,max=4096) |
+
+- `long` 不能为 null，实例字段未赋值时默认 0；`Long` 可以为 null，适合明确检查“必填”。UserDto 当前写法可以拒绝缺失年龄，但不能区分缺失和显式提交 0；本题未要求两者提示不同。
+- `@Size` 不负责拒绝 null，必填字符串要配合 `@NotNull`；长度至少 1 也不等于自动禁止全部空白，不擅自增加题目没有要求的规则。
+- Controller 的 DTO 参数需要 `@Valid @RequestBody` 才能在该请求入口触发对象字段校验。
+- EducationDto 曾只有 private 字段和校验注解，没有 getter/setter 或 Lombok `@Data`。后来补上 `@Data`，避免影响当前属性绑定和 BeanUtils 复制；BeanUtils 不是直接复制任意 private 字段的工具。
+
+### 五、Map 与 List：本轮最容易混淆的地方
+
+当前数据结构是 `Map<Long, List<Education>>`：外层 Map 用用户 ID 找到一个用户的经历列表，内层 List 保存一条条 Education。
+
+**问题：添加时可能已有 List，也可能没有，怎么办？**
+
+先 `get(id)`：有集合直接 add；没有集合就 new List、把经历 add 进去，再 put 到 Map。用户是否存在仍由 Service 查 UserMapper 判断，不能凭教育经历 Map 中没有记录就认定用户不存在。
+
+| 表达式 | 返回什么 | 容易误解的点 |
+|---|---|---|
+| map.get(id) | 对应的 List；未找到时 null | 不是单条 Education |
+| map.put(id, list) | 该 ID 原来对应的 List，原来没有时 null | 不是刚存进去的新 List，也不是整个 Map |
+| list.add(education) | boolean；当前 ArrayList 正常添加返回 true | 不是添加后的 List |
+| map.get(id).add(education) | add 的 boolean 结果 | get 返回 null 时会发生空指针异常 |
+
+**实际踩坑与修正**
+
+1. 只 new List 并 put 到 Map，忘记 `list.add(education)`：保存的是空列表，不是一条教育经历。
+2. 写成 `return map.put(id, list)`：虽然已经存入，但返回旧值 null，Controller 可能误判失败。改为先 put，再 `return list`。
+3. List 已经由 Map 保存后，再对该 List 调用 add，不必重新 put；变量与 Map 中的值引用的是同一个集合对象。
+4. `educations1` 当前只通过 key 1L 关联默认用户，不是所有用户共用的经历列表；其他用户需要独立列表。
+5. 查询时没有经历返回空 List，不等于把这个新空 List 保存进了 Map；后续新增仍应处理 Map 中没有记录的情况。
+
+### 六、Controller 返回值：201、404 和 build 是什么关系？
+
+新增教育经历接收两个来源的参数：`@PathVariable("id") long id` 获取用户 ID，`@Valid @RequestBody EducationDto` 获取请求体。
+
+- 用户存在且添加成功：`ResponseEntity.status(201).build()`。
+- 用户不存在：Service 返回 null，Controller 返回 `ResponseEntity.status(404).body(Result.NotFound())`。
+- 请求字段有问题：统一异常处理返回 400；意外内部错误由兜底处理返回 500。
+- `build()` 在这里构建无响应体的响应；`body(user)` 则构建带响应体的响应。返回值不只是“打印状态码”。
+
+**字段不合要求与用户不存在，会同时出现吗？**
+
+一个请求可以同时存在这两个问题，但在当前入口正常执行顺序下，JSON 解析和 DTO 校验失败就不会进入 Controller 方法体，也不会继续查用户。因此该次响应为 400，不再执行后续的 404 判断；路径转换、JSON 解析、校验之间不必保证哪一种请求错误总先被发现。
+
+**404 为什么不一定放全局异常？**
+
+Service 返回 null 只是普通返回值，不是抛出异常，`@ExceptionHandler` 不会自动捕获 null。当前 Controller 判断并返回 404 是可行方案；另一个方案是 Service 抛自定义“用户不存在”异常再统一映射，但本次没有为统一形式而改成自定义异常。
+
+### 七、三类 400 异常与 500 兜底
+
+| 异常 | 对应阶段 | 本项目例子 |
+|---|---|---|
+| MethodArgumentNotValidException | DTO 字段校验失败 | age=15，或缺少必填 title |
+| HttpMessageNotReadableException | 请求体无法解析/转换 | JSON 语法错误，或数字 age 填为字符串 abc |
+| MethodArgumentTypeMismatchException | 路径、查询参数类型转换失败 | /users/abc 中的 abc 不能转为 long |
+
+三种异常共用通用提示“请求字段不符合要求”，放在同一个 400 方法中：
+
+```java
+@ExceptionHandler({
+    MethodArgumentNotValidException.class,
+    HttpMessageNotReadableException.class,
+    MethodArgumentTypeMismatchException.class
+})
+```
+
+- 多个 class 是注解同一个数组属性的值，要用 `{}`，不能写成没有花括号的两个位置参数。
+- 合并后删除旧的重复映射方法，避免同一异常被同一 Advice 的多个处理方法重复声明。
+- 处理方法用 `Exception e` 可以接收上述类型；无需向客户端暴露 Java 异常类名。
+- 增加 `@ExceptionHandler(Exception.class)` 作为未匹配异常的 500 兜底，更具体的异常映射优先。
+- 曾将新处理方法写进前一个方法内部：Java 不允许在方法里再定义方法；需要先闭合前一个方法。
+- 曾创建错误对象却忘记 return：非 void 方法需要返回相应结果。
+- 只写 Exception 兜底时，/users/abc 会落入 500，所以后来补了路径参数类型异常的 400 映射。
+- 兜底不等于已经正确覆盖所有 HTTP 错误。405、415 等框架异常没有逐项审查和验证，不能宣称所有边界均已完善；500 对外给通用提示，不直接暴露异常详情。
+
+### 八、Result：到底创建对象了，还是只调用静态方法？
+
+```java
+Result<?> error = Result.SeverError();
+```
+
+这是调用静态方法，但方法内部执行了 `new Result<>()`、设置公共字段并返回对象，所以两件事都发生了。调用处的 error 指向返回的对象，并不是“只有方法调用、没有创建实例”。这种封装创建步骤的方式称为静态工厂方法，每次当前实现都会创建新对象。
+
+Result 是错误响应体；ResponseEntity 才控制实际 HTTP 状态码。仅将 Result.status 设置成 500 不会自动把 HTTP 响应改成 500。
+
+实际修正过 error 文案：`NotFound` 改为 `Not Found`，`Internal Sever Error` 改为 `Internal Server Error`。方法名 `SeverError` 本身仍可改进，但命名拼写和对外协议字段正确性是两个层面，不能混为一谈。
+
+### 九、默认数据：无参构造不等于自动填入简历
+
+需求明确默认数据参考 default.json。本轮学习者提供了实际 JSON，才据此核对初始化；之前的示例不能先当作默认数据。
+
+- 默认用户只有一个：ID 1、KAMIL、24 岁，头像和简介按提供的原文初始化。
+- 默认教育经历有四条，依次为 1990、2005、2009、2012，标题和描述与原文一致，最后一条描述末尾两个空格也保留。
+- 无参构造只是创建对象的一种入口；若内部没有赋值，long 默认 0，String 默认 null。Lombok 无参构造不会自动知道 default.json 的内容。
+- 默认数据在 Mapper 构造中用 setter 填写后加入内存集合，不必在运行时读写 JSON 文件，更不需要数据库。
+- 这不是“每个用户默认都是 KAMIL”。后续 POST /users 使用请求信息，新用户最初无教育经历，查询返回空数组，再自行添加。
+- 每条默认经历都要单独 new Education；多次 add 同一个对象只会存入多个相同引用，不会复制成独立经历。
+- 曾保留旧的 add 又粘贴新 add，造成第一条经历重复；删除重复添加后补齐其余三个独立对象。示例指导也应明确“替换旧代码”还是“追加”，避免诱发重复。
+- 曾将 setDescription 的普通双引号字符串按回车直接拆行，导致字符串未闭合；恢复同一行即可。编辑器自动视觉折行不等于代码中的换行。
+
+### 十、IDEA 格式化与工程规范问答
+
+- Windows 默认 Reformat Code 为 Ctrl + Alt + L；先聚焦 Java 编辑区域，或从 Code 菜单的格式化动作执行。
+- 快捷键无反应时，到 Settings → Keymap 搜索 Reformat Code，检查绑定；本次截图确认仍为 Ctrl + Alt + L，未据此断言具体是哪款外部软件拦截。
+- 需要更改时右键最上层代码格式化动作，选择 Add Keyboard Shortcut，设置无冲突组合并 Apply/OK。截图只确认进入设置流程，没有格式化成功的最终证据。
+- 插件商店的 Keymap 标签不是快捷键设置页；不必安装插件才能格式化。
+- IdeaVim 是 Vim 操作方式插件，有普通/插入模式，与格式化无直接关系，不熟悉 Vim 时不用为了这个问题安装。
+- 格式化改善空格和缩进，不修复业务逻辑；Java 方法小驼峰、包名 entity、实现类后缀 Impl、集合 private 等是规范建议，优先级低于接口正确性和验收，不需要为了小作业增加更多层。
+
+<a id="flow-2026-11-27"></a>
+### 十一、新增教育经历流程图
+
+```mermaid
+flowchart TD
+    A[POST /users/id/educations] --> B[Spring MVC 解析路径和 JSON 并校验 DTO]
+    B --> C{参数是否有效}
+    C -- 否 --> D[全局异常处理返回 400 和错误体]
+    C -- 是 --> E[Controller 调用 EducationService]
+    E --> F{UserMapper 是否找到用户}
+    F -- 否 --> G[Service 返回 null]
+    G --> H[Controller 返回 404 和错误体]
+    F -- 是 --> I[Service 将 DTO 转为 Education]
+    I --> J[Mapper 查找该用户的 List]
+    J --> K{是否已有集合}
+    K -- 否 --> L[创建 List 添加经历并放入 Map]
+    K -- 是 --> M[向原 List 添加经历]
+    L --> N[返回更新后的 List]
+    M --> N
+    N --> O[Controller 返回 201 无响应体]
+```
+
+图中是分层后的预期业务流程；最近读取的 Service 在判断用户前就创建并复制对象，属于可调整的执行顺序，不影响“无用户不保存”的判断。流程图不是 HTTP 测试结果。
+
+<a id="tests-2026-11-27"></a>
+### 十二、完成度、经验与下一步
+
+**源码检查确认的进展**
+
+四个主要接口已写出；DTO 校验、用户存在判断、Map/List 保存、新增 ID、默认用户和四条教育经历、400/404/500 主要响应路径已经连接。EducationDto 已补 @Data，description 拼写和标准错误描述已经修正，DTO 转实体已统一到 Service。这里只说明本轮读取范围，不等于全面代码审计或自动评分通过。
+
+**最重要的经验**
+
+1. 写集合操作前先说清楚“现在操作的是 Map、List 还是 Education”，再查该方法的返回值，不凭方法名猜。
+2. 对象引用、容器关联、字段赋值是不同操作：new 不等于填好数据，put 不等于向 List 添加经历，return 不会改变被调用方法的返回含义。
+3. HTTP 状态码与响应体字段分开检查；201 无响应体、404 标准描述都属于协议要求，不只是“能返回点东西”。
+4. 解析、校验、业务判断分阶段，输入错误不应一律落入 500。
+5. 修改分层时同时检查调用处与被调用方法签名，避免搬了转换代码却仍传 DTO。
+6. 默认数据按附件逐字段核对，示例与正式默认值要区分；新增用户不继承默认用户的经历。
+7. 助手应先读最新文件，只指出当前问题；能够合并异常处理时应直接说明，避免先要求分开、再改口造成返工。提供示例要标明插入位置和替换范围。
+8. “主要业务源码写完”“编译通过”“接口验收通过”“整个作业可提交”是不同结论，不能互相替代。
+
+**未完成或未验证**
+
+- 未执行本次业务代码的编译、启动、curl/Postman 请求或单元测试，没有全量验收证据。
+- 测试目录最近检查仍只有生成的 contextLoads，题目要求的任选两个 Service public 方法单测尚待完成。
+- 项目为 Maven 工程，尚未提供题目要求的 Gradle Wrapper 和 `./gradlew bootRun` 启动支持；不在本次文档上传中擅自迁移。
+- 并发、所有框架 HTTP 错误、数值及长度边界没有逐项验证；AtomicLong 不代表集合线程安全。
+- 本次仅上传 README。Basic Quiz 仍在学习者本机，仓库内原 SpringBoot_javaWeb_quickstart 快照不代表这份作业，也没有借总结上传修改业务代码。
+
+**下一步验收清单（计划，不是已通过结果）**
+
+先补启动方式和两个 Service 单测，再运行应用：核对默认用户及四条经历、用户不存在 404、存在但无经历返回 []、新增用户 201 且 ID 递增、重名允许、教育经历新增 201 无响应体且顺序正确；逐项测试字段缺失、null、长度上下界、age=16/17、数字传 abc、错误 JSON、路径 ID 为 abc，并核对错误体 status/error/message。
 
 ## 记录约定
 
